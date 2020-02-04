@@ -1,0 +1,3 @@
+# SENIR-model
+
+SENIR model
