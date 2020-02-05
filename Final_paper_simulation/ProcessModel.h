@@ -14,8 +14,11 @@ using namespace std;
 int n = 4039;
 double infected_rate = 0.32;
 double received_rate = 0.228;
+double iNsidious_rate = 0.8;
 double recovered_rate = 0.083; 
 double infected_sim_array[4] = { 0.2, 0.3, 0.4, 0.5 };
+double born_rate = 5;
+double deat_rate = 0.2;
 
 bool guessTrue(double probability) {
 	static default_random_engine e;
@@ -29,7 +32,14 @@ bool guessTrue(double probability) {
 	}
 };
 
-void exposedProcess(vector<int>& state, vector<int>& temp, int** adj_matrix) {
+
+// 0 : sus 
+//1 : expose 
+//2 : iNsidious 
+//3 : infected 
+//4 : recovered
+//5:  death
+void exposedProcess(vector<int>& state, vector<int>& temp, int** adj_matrix) { // S->E
 #pragma omp parallel for
 	for (int i = 0; i < n; i++) {
 		int node_state = state[i];
@@ -37,7 +47,7 @@ void exposedProcess(vector<int>& state, vector<int>& temp, int** adj_matrix) {
 			int infected_neighbor_num = 0;
 #pragma omp parallel for
 			for (int j = 0; j < n; j++) {
-				if (adj_matrix[j][i] == 1 && state[j] == 2)
+				if (adj_matrix[j][i] == 1 && state[j] == 3)
 					infected_neighbor_num++;
 			}
 			double infected_probaility = 1 - pow(1 - received_rate, infected_neighbor_num);
@@ -47,26 +57,49 @@ void exposedProcess(vector<int>& state, vector<int>& temp, int** adj_matrix) {
 	}
 };
 
-void infectedProcess_2(vector<int>& state, vector<int>& temp, int x) {
+void iNsidiousProcess(vector<int>& state, vector<int>& temp) { // E->N
 	for (int i = 0; i < n; i++) {
 		int node_state = state[i];
 		if (node_state == 1) {
-			if (guessTrue(infected_sim_array[x])) node_state = 2;
+			if (guessTrue(iNsidious_rate)) node_state = 2;
 			temp[i] = node_state;
 		}
 	}
-};
+}
 
-void recoveredProcess(vector<int>& state, vector<int>& temp) {
+void infectedProcess_2(vector<int>& state, vector<int>& temp, int x) { // N->I
 	for (int i = 0; i < n; i++) {
 		int node_state = state[i];
 		if (node_state == 2) {
-			if (guessTrue(recovered_rate)) node_state = 0;
+			if (guessTrue(infected_sim_array[x])) node_state = 3;
 			temp[i] = node_state;
 		}
 	}
 };
 
+void recoveredProcess(vector<int>& state, vector<int>& temp) { // I->S
+	for (int i = 0; i < n; i++) {
+		int node_state = state[i];
+		if (node_state == 3) {
+			if (guessTrue(recovered_rate)) node_state = 4;
+			temp[i] = node_state;
+		}
+	}
+};
+
+void bornProcess(vector<int>& state, int n, int** adj_matrix) {
+	//改變adj和state matrix的長度
+	n = n + bornRate;
+	for (int i = 0; i < bornRate; i++) {
+		state.push_back(0);
+	}
+
+}
+void deathProcess(vector<int>& state, vector<int>& temp) {
+	for (int i = 0; i < n; i++) {
+		if(guessTrue(recovered_rate)) temp[i] = 5;
+	}
+}
 void update_state(vector<int>& state, vector<int>& temp) {
 #pragma omp parallel for
 	for (int i = 0; i < n; i++) state[i] = temp[i];
