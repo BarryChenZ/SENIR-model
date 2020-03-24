@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <fstream>
 #include <vector>
-#include <omp.h>
 using namespace std;
 
 int n = 4039;
@@ -89,7 +88,7 @@ void recoveredProcess(vector<int>& state, vector<int>& temp) { // I->S
 
 void bornProcess(vector<int>& state, int n, int** adj_matrix) {
 	//改變adj和state matrix的長度
-	n = n + bornRate;
+	n = n + born_rate;
 	for (int i = 0; i < bornRate; i++) {
 		state.push_back(0);
 	}
