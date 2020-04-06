@@ -52,7 +52,7 @@ void exposedProcess(vector<Node>& NODES, vector<int>& temp, vector<vector<int>> 
 				if (adj_matrix[j][i] == 1 && NODES[j].get_state() == 3)
 					infected_neighbor_num++;
 			}
-			double infected_probaility = 1 - pow(1 - received_rate, infected_neighbor_num);
+			double infected_probaility = 1 - pow(1 - NODES[i].exposed_rate, infected_neighbor_num);
 			if (guessTrue(infected_probaility)) node_state = 1;
 			temp[i] = node_state;
 		}
@@ -60,11 +60,17 @@ void exposedProcess(vector<Node>& NODES, vector<int>& temp, vector<vector<int>> 
 };
 
 //S->N for short range
-void iNsidiousProcess(vector<Node>& NODES, vector<int>& temp) { // E->N
+void iNsidiousProcess(vector<Node>& NODES, vector<int>& temp, Physical_network& P) { // E->N
 	for (int i = 0; i < n; i++) {
 		int node_state = NODES[i].get_state();
 		if (node_state == 0) {
-			if (guessTrue(iNsidious_rate)) node_state = 2;
+			int infected_neighbor_num = 0;
+			for (int j = 0; j < NODES[i].neighbor_set.size(); j++) {
+				if (NODES[NODES[i].neighbor_set[j]].get_state() == 3)
+					infected_neighbor_num++;
+			}
+			double infected_probaility = 1 - pow(1 - NODES[i].iNsidious_rate, infected_neighbor_num);
+			if (guessTrue(infected_probaility)) node_state = 2;
 			temp[i] = node_state;
 		}
 	}
@@ -133,12 +139,12 @@ void update_state(vector<Node>& NODES, vector<int>& temp) {
 	return;
 };
 
-void record(vector<int>& state, vector<double>& tmp) {
-	//只記錄I state
+void record(vector<Node>& NODES, vector<double>& tmp) {
+	//只記錄I state, tmp 紀錄各時間的I比率
 	double num = 0;
 #pragma omp parallel for
 	for (int i = 0; i < n; i++) {
-		if (state[i] == 2) num++;
+		if (NODES[i].get_state() == 2) num++;
 	}
 	tmp.push_back(double(num / n));
 	cout << double(num / n) << " ";

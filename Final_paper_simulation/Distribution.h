@@ -21,26 +21,27 @@ using namespace std;
 
 class Node {
 private:
-	int number;
+	int number;//編號
 	int status = 0;
 	//transmission
 	vector<double> rate;//參數可以是rate也可以分開假設//暫定
-	vector<int> neighbor_set;
 	double degree_P;
 	double degree_S;
 	//mobility
 	double x_pos, y_pos;
 public:
+	vector<int> neighbor_set;
 	double infected_rate = 0.32;
 	double received_rate = 0.228;
+	double exposed_rate;
 	double iNsidious_rate = 0.8;
 	double recovered_rate = 0.083;
 	double death_rate = 0.2;
 	double wake_up_rate;
 	double lose_immunity_rate;
 
-	Node(int NUMBER, vector<double> RATE) {
-		number = NUMBER;
+	Node(int ID) {
+		number = ID;
 	};
 	double countNeigh(vector<vector<int>> adj) {//on the social network
 		double tmp = 0;
@@ -87,8 +88,12 @@ public:
 	double get_degree_s(int ID, vector<Node> NODES) {
 		double res = 0;
 		for (int i = 0; i < nums; i++) {
+			NODES[i].neighbor_set.clear();
 			double tmp = pow(NODES[i].get_position_x() - NODES[ID].get_position_x, 2) + pow(NODES[i].get_position_y() - NODES[ID].get_position_y, 2);//distance
-			if (sqrt(tmp) <= range && i != ID) res++;
+			if (sqrt(tmp) <= range && i != ID) {
+				NODES[i].neighbor_set.push_back(i);
+				res++;
+			}
 		}
 		return res;
 	}
@@ -98,14 +103,16 @@ class Social_network {
 private:
 	int nodes;
 	double average_degree;
-	vector<vector<int>> adj_matrix;
 public:
+	vector<vector<int>> adj_matrix;
+
 	Social_network(int num){
 		nodes = num;
+		initial();
 	}
-	void initial(double AVG_D) {
+	void initial() {
 		srand(time(NULL));
-		average_degree = AVG_D;
+		//average_degree = AVG_D;
 		adj_matrix.resize(nodes, vector<int>(nodes));
 		vector<double> degree(nodes, 0); 
 		double total_link = 0;//total > start*start
