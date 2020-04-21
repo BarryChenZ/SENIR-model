@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <random>
+#include "Distribution.h"
 
 using namespace std;
 
@@ -141,3 +143,94 @@ public:
 	}
 };
 
+class Gauss_Markov {
+private:
+	int number;
+	double velocity;
+	double direction;
+	double chi_v = 0.99, mu_v = 0.0;
+	double chi_d = 0.99, mu_d = 0.0;
+	double chi_s = 1;
+	double mu = 5.0, sigma = 2.0;
+	int max_x = 1000, max_y = 1000;
+public:
+	Gauss_Markov(int ID) {
+		number = ID;
+	}
+	void Set_v() {
+		std::default_random_engine generator;
+		std::normal_distribution<double> distribution(mu, sigma);
+		velocity = chi_v * velocity + (1 - chi_v)*mu_v + chi_s * (distribution(generator)*sqrt(1 - pow(chi_v, 2)));
+	}
+	void Set_d() {
+		std::default_random_engine generator;
+		std::normal_distribution<double> distribution(mu, sigma);
+		direction = chi_d * direction + (1 - chi_d)*mu_v + chi_s * (distribution(generator)*sqrt(1 - pow(chi_d, 2)));
+	}
+	void Process(vector<Node>& NODES) {//Moving one time
+		double x = NODES[number].get_position_x() + velocity * cos(direction);
+		double y = NODES[number].get_position_y() + direction * sin(direction);
+		if (x > max_x || x < 0) x = NODES[number].get_position_x() - velocity * cos(direction);
+		if (y > max_y || y < 0) y = NODES[number].get_position_y() - velocity * cos(direction);
+		NODES[number].set_position(x, y);
+	}
+};
+
+//Identiyty mobility model
+class Identity {
+private:
+	int number; //for ID
+	int positions;// number of positions
+	double rho = 0.7, gamma = 0.7;//Test value
+	vector<int> times;
+	double total_time = 1;
+	double visited = 1;
+public:
+	int At_position;
+	Identity(int ID, int n) {//initial
+		number = ID;
+		positions = n;
+		times.resize(positions, 0);
+		At_position = rand() % (positions - 0) + 0;
+		times[At_position]++;
+	}
+	void Process() {
+		double exploraiton = rho * pow(visited, -1 * gamma);
+		//double Pre_return = 1 - exploraiton;
+		double tmp = (double)rand() / (RAND_MAX + 1.0);
+		if (isValid(exploraiton)) {
+			int unvisited = positions - visited;
+			double temp1 = 0.0;
+			for (int i = 0; i < positions; i++) {
+				if (times[i] == 0) {
+					temp1 += pow(unvisited, -1);// 1/unvisited ¥Ã»·=0
+					if (temp1 > tmp) {
+						At_position = i;
+						times[i]++;
+						break;
+					}
+				}
+			}
+			visited++;
+		}
+		else {
+			double temp = 0.0;
+			for (int i = 0; i < positions; i++) {
+				temp += times[i] / total_time;
+				//cout << temp << endl;
+				if (times[i] > 0 && temp > tmp) {
+					At_position = i;
+					times[i]++;
+					break;
+				}
+			}
+		}
+		total_time++;
+		return;
+	}
+	bool isValid(double prob) {
+		double x = (double)rand() / (RAND_MAX + 1.0);
+		if (x < prob) return true;
+		return false;
+	}
+};
