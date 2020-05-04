@@ -12,7 +12,7 @@
 #include "Distribution.h"
 using namespace std;
 
-int n = 4039;
+//int n = 4039;
 double infected_rate = 0.32;
 double received_rate = 0.228;
 double iNsidious_rate = 0.8;
@@ -32,6 +32,19 @@ bool guessTrue(double probability) {
 	}
 };
 
+double infected_fraction = 0.05; //5%
+void initial_infected(vector<Node>& NODES, int n) {
+	double tmp = n * infected_fraction;
+	int i = 0;
+	while (i < tmp) {
+		int x = (int)(rand() % n);
+		if (NODES[x].get_state() == 0) {
+			NODES[x].change_state(3);
+			i++;
+		}
+	}
+	return;
+}
 
 //0 : sus 
 //1 : expose 
@@ -41,43 +54,46 @@ bool guessTrue(double probability) {
 //5:  death
 
 //S -> E for long range
-void exposedProcess(vector<Node>& NODES, vector<int>& temp, vector<vector<int>> adj_matrix) { // S->E
-#pragma omp parallel for
+void exposedProcess(vector<Node>& NODES, vector<int>& temp, vector<vector<int>> adj_matrix, int n) { // S->E
 	for (int i = 0; i < n; i++) {
 		int node_state = NODES[i].get_state();
-		if (node_state == 0) {
+		if (node_state == 0 && temp[i] == 0) {
 			int infected_neighbor_num = 0;
-#pragma omp parallel for
 			for (int j = 0; j < n; j++) {
-				if (adj_matrix[j][i] == 1 && NODES[j].get_state() == 3)
+				//cout << adj_matrix[i][j];
+				if (adj_matrix[j][i] == 1 && NODES[j].get_state() == 3 && j != i)
 					infected_neighbor_num++;
 			}
-			double infected_probaility = 1 - pow(1 - NODES[i].exposed_rate, infected_neighbor_num);
-			if (guessTrue(infected_probaility)) node_state = 1;
+			double infected_probability = 1 - pow(1 - NODES[i].exposed_rate, infected_neighbor_num);
+			//cout << infected_probability << endl;
+			if (guessTrue(infected_probability)) {
+				node_state = 1;
+			}
 			temp[i] = node_state;
 		}
 	}
 };
 
 //S->N for short range
-void iNsidiousProcess(vector<Node>& NODES, vector<int>& temp, Physical_network& P) { // E->N
+void iNsidiousProcess(vector<Node>& NODES, vector<int>& temp, Physical_network& P, int n) { // E->N
 	for (int i = 0; i < n; i++) {
 		int node_state = NODES[i].get_state();
-		if (node_state == 0) {
+		if (node_state == 0 && temp[i] == 0) {
 			int infected_neighbor_num = 0;
 			for (int j = 0; j < NODES[i].neighbor_set.size(); j++) {
 				if (NODES[NODES[i].neighbor_set[j]].get_state() == 3)
 					infected_neighbor_num++;
 			}
-			double infected_probaility = 1 - pow(1 - NODES[i].iNsidious_rate, infected_neighbor_num);
-			if (guessTrue(infected_probaility)) node_state = 2;
+			double infected_probability = 1 - pow(1 - NODES[i].iNsidious_rate, infected_neighbor_num);
+			//cout << infected_neighbor_num << endl;
+			if (guessTrue(infected_probability)) node_state = 2;
 			temp[i] = node_state;
 		}
 	}
 }
 
 //E->I and N->I
-void infectedProcess_1(vector<Node>& NODES, vector<int>& temp) { // N->I
+void infectedProcess_1(vector<Node>& NODES, vector<int>& temp, int n) { // N->I
 	for (int i = 0; i < n; i++) {
 		int node_state = NODES[i].get_state();
 		if (node_state == 1) {
@@ -86,7 +102,7 @@ void infectedProcess_1(vector<Node>& NODES, vector<int>& temp) { // N->I
 		}
 	}
 };
-void infectedProcess_2(vector<Node>& NODES, vector<int>& temp) {
+void infectedProcess_2(vector<Node>& NODES, vector<int>& temp, int n) {
 	for (int i = 0; i < n; i++) {
 		int node_state = NODES[i].get_state();
 		if (node_state == 2) {
@@ -96,7 +112,7 @@ void infectedProcess_2(vector<Node>& NODES, vector<int>& temp) {
 	}
 }
 //I->R
-void recoveredProcess(vector<Node>& NODES, vector<int>& temp) { // I->S
+void recoveredProcess(vector<Node>& NODES, vector<int>& temp, int n) { // I->S
 	for (int i = 0; i < n; i++) {
 		int node_state = NODES[i].get_state();
 		if (node_state == 3) {
@@ -106,13 +122,13 @@ void recoveredProcess(vector<Node>& NODES, vector<int>& temp) { // I->S
 	}
 };
 //any state -> D
-void deathProcess(vector<Node>& NODES, vector<int>& temp) {
+void deathProcess(vector<Node>& NODES, vector<int>& temp, int n) {
 	for (int i = 0; i < n; i++) {
 		if(guessTrue(death_rate)) temp[i] = 5;
 	}
 }
 //D -> S wake up and lose malware
-void wakeupProcess(vector<Node>& NODES, vector<int>& temp) {
+void wakeupProcess(vector<Node>& NODES, vector<int>& temp, int n) {
 	for (int i = 0; i < n; i++) {
 		int node_state = NODES[i].get_state();
 		if (node_state == 5) {
@@ -121,7 +137,7 @@ void wakeupProcess(vector<Node>& NODES, vector<int>& temp) {
 		}
 	}
 }
-void loseImProcess(vector<Node>& NODES, vector<int>& temp) {
+void loseImProcess(vector<Node>& NODES, vector<int>& temp, int n) {
 	for (int i = 0; i < n; i++) {
 		int node_state = NODES[i].get_state();
 		if (node_state == 4) {
@@ -131,7 +147,7 @@ void loseImProcess(vector<Node>& NODES, vector<int>& temp) {
 	}
 }
 
-void update_state(vector<Node>& NODES, vector<int>& temp) {
+void update_state(vector<Node>& NODES, vector<int>& temp, int n) {
 #pragma omp parallel for
 	for (int i = 0; i < n; i++) {
 		NODES[i].change_state(temp[i]);
@@ -139,13 +155,26 @@ void update_state(vector<Node>& NODES, vector<int>& temp) {
 	return;
 };
 
-void record(vector<Node>& NODES, vector<double>& tmp) {
+void record(vector<Node>& NODES, vector<double>& tmp, int n) {
 	//只記錄I state, tmp 紀錄各時間的I比率
-	double num = 0;
+	double num = 0.0;
 #pragma omp parallel for
 	for (int i = 0; i < n; i++) {
-		if (NODES[i].get_state() == 2) num++;
+		if (NODES[i].get_state() == 3 || NODES[i].get_state() == 2) num++;
 	}
-	tmp.push_back(double(num / n));
-	cout << double(num / n) << " ";
+	tmp.push_back(double(num / (double)n));
+	cout << double(num / (double)n) << " ";
 };
+
+void record_all_state(vector<Node>& NODES, vector<vector<double>>& tmp, int n, int time) {
+	vector<double> num_state(6, 0.0);
+	for (auto i : NODES) {
+		num_state[i.get_state()]++;
+	}
+	for (auto i : num_state) {
+		i = i / double(n);
+		tmp[time].push_back(i);
+		cout << i << " ";
+	}
+	cout << endl;
+}

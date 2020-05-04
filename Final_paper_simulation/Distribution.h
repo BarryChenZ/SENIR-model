@@ -35,12 +35,12 @@ public:
 	vector<int> neighbor_set;
 	double infected_rate = 0.32;
 	double received_rate = 0.228;
-	double exposed_rate;
+	double exposed_rate = 0.6;
 	double iNsidious_rate = 0.8;
 	double recovered_rate = 0.083;
-	double death_rate = 0.2;
-	double wake_up_rate;
-	double lose_immunity_rate;
+	double death_rate = 0.02;
+	double wake_up_rate = 0.2;
+	double lose_immunity_rate = 0.2;
 
 	Node(int ID) {
 		number = ID;
@@ -128,7 +128,7 @@ public:
 			degree[i] = start-1;//不包含自己
 			total_link += start-1;
 		}
-		//total_link -= start * start;
+		//cout << total_link << endl;
 		
 		//分配link by BA model(Scare-free)
 		while (start < nodes) {
@@ -136,7 +136,6 @@ public:
 			for (int i = 0; i < start; i++) {
 				//cout << degree[i] << endl;
 				double prob = degree[i]/total_link;
-				
 				if (isValid(prob)) {
 					adj_matrix[start][i] = 1, adj_matrix[i][start] = 1;
 					degree[i]++;
@@ -147,6 +146,7 @@ public:
 			total_link += degree[start] * 2;
 			start++;
 		}
+		cout << total_link << endl;
 		return;
 	}
 	bool isValid(double prob) {
