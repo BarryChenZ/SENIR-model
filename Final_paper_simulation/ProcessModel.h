@@ -178,3 +178,109 @@ void record_all_state(vector<Node>& NODES, vector<vector<double>>& tmp, int n, i
 	}
 	cout << endl;
 }
+
+//Modified simulaiton idea.
+//focus on node current state. Each node in the network will decided that which state to go. 
+int modified_sus_process(vector<Node>& NODES, vector<int>& temp, vector<vector<int>> adj_matrix, Physical_network& P, int n, int i, double guess) {
+	//to E N D S
+	double eff_expose;
+	double eff_iN;
+	int infected_neighbor_num_e = 0;
+	int infected_neighbor_num_n = 0;
+	for (int j = 0; j < n; j++) {
+		//cout << adj_matrix[i][j];
+		if (adj_matrix[j][i] == 1 && NODES[j].get_state() == 3 && j != i)
+			infected_neighbor_num_e++;
+	}
+	for (int j = 0; j < NODES[i].neighbor_set.size(); j++) {
+		if (NODES[NODES[i].neighbor_set[j]].get_state() == 3)
+			infected_neighbor_num_n++;
+	}
+	cout << infected_neighbor_num_n;
+	eff_expose = 1 - pow(1 - NODES[i].exposed_rate, infected_neighbor_num_e);
+	eff_iN = 1 - pow(1 - NODES[i].iNsidious_rate, infected_neighbor_num_n);
+		
+	
+	if (guess <= eff_expose) return 1;
+	else if (guess <= eff_expose + eff_iN) return 2;
+	else if (guess <= eff_expose + eff_iN + death_rate) return 5;
+	else return 0;
+	
+}
+// Particular node i
+int modified_ex_process(Node i, double guess) {
+	
+	if (guess <= i.infected_rate) return 3;
+	else if (guess <= i.infected_rate + i.death_rate) return 5;
+	else return 1;
+}
+
+int modified_iN_process(Node i, double guess) {
+	
+	if (guess <= i.infected_rate) return 3;
+	else if (guess <= i.infected_rate + i.death_rate + i.ex_death_rate) return 5;
+	else return 2;
+}
+
+int modified_inf_process(Node i, double guess) {
+	
+	if (guess <= i.recovered_rate) return 4;
+	else if (guess <= i.recovered_rate + i.death_rate + i.ex_death_rate) return 5;
+	else return 3;
+}
+
+int modified_dea_process(Node i, double guess) {
+	
+	if (guess <= i.wake_up_rate) {
+		if (i.get_state() == 4) return 4;
+		return 0;
+	}
+	else {
+		return 5;
+	}
+	
+}
+
+int modified_rec_process(Node i, double guess) {
+	
+	if (guess <= i.death_rate) return 5;
+	else if (guess <= i.death_rate + i.lose_immunity_rate) return 0;
+	else return 4;
+}
+
+//0 : sus 
+//1 : expose 
+//2 : iNsidious 
+//3 : infected 
+//4 : recovered
+//5:  death
+
+void Judgement(vector<int>& temp, vector<Node>& NODES, vector<vector<int>> adj_matrix, Physical_network& P, int n) {
+	static default_random_engine e;
+	static uniform_real_distribution<double> u(0, 1);
+	for (int i = 0; i < n; i++) {
+		//cout << i << endl;
+		double guess = u(e);
+		int state = NODES[i].get_state();
+		switch (state) {
+		case 0:
+			temp[i] = modified_sus_process(NODES, temp, adj_matrix, P, n, i, guess);
+			break;
+		case 1:
+			temp[i] = modified_ex_process(NODES[i], guess);
+			break;
+		case 2:
+			temp[i] = modified_iN_process(NODES[i], guess);
+			break;
+		case 3:
+			temp[i] = modified_inf_process(NODES[i], guess);
+			break;
+		case 4:
+			temp[i] = modified_dea_process(NODES[i], guess);
+			break;
+		case 5:
+			temp[i] = modified_rec_process(NODES[i], guess);
+			break;
+		}
+	}
+}

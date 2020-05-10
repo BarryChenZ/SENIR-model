@@ -39,6 +39,7 @@ public:
 	double iNsidious_rate = 0.8;
 	double recovered_rate = 0.083;
 	double death_rate = 0.02;
+	double ex_death_rate = 0.005;
 	double wake_up_rate = 0.2;
 	double lose_immunity_rate = 0.2;
 
