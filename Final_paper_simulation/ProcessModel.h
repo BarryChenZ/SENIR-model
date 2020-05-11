@@ -193,17 +193,20 @@ int modified_sus_process(vector<Node>& NODES, vector<int>& temp, vector<vector<i
 			infected_neighbor_num_e++;
 	}
 	for (int j = 0; j < NODES[i].neighbor_set.size(); j++) {
-		if (NODES[NODES[i].neighbor_set[j]].get_state() == 3)
+		//cout << NODES[i].neighbor_set[j] << endl;
+		if (NODES[NODES[i].neighbor_set[j]].get_state() == 3 && j != i) {
 			infected_neighbor_num_n++;
+			//cout << 1;
+		}
 	}
-	cout << infected_neighbor_num_n;
+
 	eff_expose = 1 - pow(1 - NODES[i].exposed_rate, infected_neighbor_num_e);
 	eff_iN = 1 - pow(1 - NODES[i].iNsidious_rate, infected_neighbor_num_n);
 		
-	
+	//cout << infected_neighbor_num_n << endl;
 	if (guess <= eff_expose) return 1;
 	else if (guess <= eff_expose + eff_iN) return 2;
-	else if (guess <= eff_expose + eff_iN + death_rate) return 5;
+	else if (guess <= eff_expose + eff_iN + NODES[i].death_rate) return 5;
 	else return 0;
 	
 }

@@ -63,6 +63,9 @@ public:
 	double get_position_y() {
 		return y_pos;
 	}
+	void set_degreeP(int degree) {
+		degree_P = degree;
+	}
 	int get_state() {
 		return status;
 	}
@@ -76,7 +79,7 @@ class Physical_network {
 	//can be one or >1 group
 private:
 	int nums; //可以有部分或者很多點
-	double range = 10.0;
+	double range = 100.0;//10 average degree:1, 30 average degree: 5, 50 average degree: 8
 	double max_x = 1000, max_y = 1000;
 public:
 	//type 1 : based on range
@@ -88,14 +91,17 @@ public:
 			double tmp2  = Uniform_distri(0.0, max_y);
 			NODES[i].set_position(tmp1, tmp2);
 		}
+		for (int i = 0; i < nums; i++) {
+			NODES[i].set_degreeP(get_degree(i,NODES));
+		}
 	}
 	double get_degree(int ID, vector<Node>& NODES) {
 		double res = 0;
+		NODES[ID].neighbor_set.clear();
 		for (int i = 0; i < nums; i++) {
-			NODES[i].neighbor_set.clear();
 			double tmp = pow(NODES[i].get_position_x() - NODES[ID].get_position_x(), 2) + pow(NODES[i].get_position_y() - NODES[ID].get_position_y(), 2);//distance
 			if (sqrt(tmp) <= range && i != ID) {
-				NODES[i].neighbor_set.push_back(i);
+				NODES[ID].neighbor_set.push_back(i);
 				res++;
 			}
 		}
@@ -147,7 +153,7 @@ public:
 			total_link += degree[start] * 2;
 			start++;
 		}
-		cout << total_link << endl;
+		//cout << total_link << endl;
 		return;
 	}
 	bool isValid(double prob) {
