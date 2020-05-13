@@ -52,12 +52,13 @@ void initial_infected(vector<Node>& NODES, int n) {
 //3 : infected 
 //4 : recovered
 //5:  death
+//6:  recovered to death
 
 //S -> E for long range
 void exposedProcess(vector<Node>& NODES, vector<int>& temp, vector<vector<int>> adj_matrix, int n) { // S->E
 	for (int i = 0; i < n; i++) {
 		int node_state = NODES[i].get_state();
-		if (node_state == 0 && temp[i] == 0) {
+		if (node_state == 0 && temp[i] == -1) {
 			int infected_neighbor_num = 0;
 			for (int j = 0; j < n; j++) {
 				//cout << adj_matrix[i][j];
@@ -67,9 +68,8 @@ void exposedProcess(vector<Node>& NODES, vector<int>& temp, vector<vector<int>> 
 			double infected_probability = 1 - pow(1 - NODES[i].exposed_rate, infected_neighbor_num);
 			//cout << infected_probability << endl;
 			if (guessTrue(infected_probability)) {
-				node_state = 1;
+				temp[i] = 1;
 			}
-			temp[i] = node_state;
 		}
 	}
 };
@@ -78,7 +78,7 @@ void exposedProcess(vector<Node>& NODES, vector<int>& temp, vector<vector<int>> 
 void iNsidiousProcess(vector<Node>& NODES, vector<int>& temp, Physical_network& P, int n) { // E->N
 	for (int i = 0; i < n; i++) {
 		int node_state = NODES[i].get_state();
-		if (node_state == 0 && temp[i] == 0) {
+		if (node_state == 0 && temp[i] == -1) {
 			int infected_neighbor_num = 0;
 			for (int j = 0; j < NODES[i].neighbor_set.size(); j++) {
 				if (NODES[NODES[i].neighbor_set[j]].get_state() == 3)
@@ -86,8 +86,7 @@ void iNsidiousProcess(vector<Node>& NODES, vector<int>& temp, Physical_network& 
 			}
 			double infected_probability = 1 - pow(1 - NODES[i].iNsidious_rate, infected_neighbor_num);
 			//cout << infected_neighbor_num << endl;
-			if (guessTrue(infected_probability)) node_state = 2;
-			temp[i] = node_state;
+			if (guessTrue(infected_probability)) temp[i] = 2;
 		}
 	}
 }
@@ -96,35 +95,43 @@ void iNsidiousProcess(vector<Node>& NODES, vector<int>& temp, Physical_network& 
 void infectedProcess_1(vector<Node>& NODES, vector<int>& temp, int n) { // N->I
 	for (int i = 0; i < n; i++) {
 		int node_state = NODES[i].get_state();
-		if (node_state == 1) {
-			if (guessTrue(infected_rate)) node_state = 3;
-			temp[i] = node_state;
+		if (node_state == 1 && temp[i] == -1) {
+			if (guessTrue(infected_rate)) temp[i] = 3;
 		}
 	}
 };
 void infectedProcess_2(vector<Node>& NODES, vector<int>& temp, int n) {
 	for (int i = 0; i < n; i++) {
 		int node_state = NODES[i].get_state();
-		if (node_state == 2) {
-			if (guessTrue(infected_rate)) node_state = 3;
-			temp[i] = node_state;
+		if (node_state == 2 && temp[i] == -1) {
+			if (guessTrue(infected_rate)) temp[i] = 3;
 		}
 	}
 }
-//I->R
+//I->R || D->R
 void recoveredProcess(vector<Node>& NODES, vector<int>& temp, int n) { // I->S
 	for (int i = 0; i < n; i++) {
 		int node_state = NODES[i].get_state();
-		if (node_state == 3) {
-			if (guessTrue(recovered_rate)) node_state = 4;
-			temp[i] = node_state;
+		if (node_state == 3 && temp[i] == -1) {
+			if (guessTrue(NODES[i].recovered_rate)) temp[i] = 4;
+		}
+		if (node_state == 6 && temp[i] == -1) {
+			if (guessTrue(NODES[i].wake_up_rate)) temp[i] = 4;
 		}
 	}
 };
 //any state -> D
 void deathProcess(vector<Node>& NODES, vector<int>& temp, int n) {
 	for (int i = 0; i < n; i++) {
-		if(guessTrue(death_rate)) temp[i] = 5;
+		int node_state = NODES[i].get_state();
+		if (node_state == 0 || node_state == 2 || node_state == 4 && temp[i] == -1) {
+			if (guessTrue(NODES[i].death_rate)) {
+				node_state = node_state == 4 ? 6 : 5;
+			}
+		}
+		else if(node_state == 1 && node_state == 3 && temp[i] == -1){
+			if (guessTrue(NODES[i].death_rate+ NODES[i].ex_death_rate)) temp[i] = 5;
+		}
 	}
 }
 //D -> S wake up and lose malware
@@ -132,8 +139,7 @@ void wakeupProcess(vector<Node>& NODES, vector<int>& temp, int n) {
 	for (int i = 0; i < n; i++) {
 		int node_state = NODES[i].get_state();
 		if (node_state == 5) {
-			if (guessTrue(NODES[i].wake_up_rate)) node_state = 0;
-			temp[i] = node_state;
+			if (guessTrue(NODES[i].wake_up_rate)) temp[i] = 0;
 		}
 	}
 }
@@ -141,9 +147,15 @@ void loseImProcess(vector<Node>& NODES, vector<int>& temp, int n) {
 	for (int i = 0; i < n; i++) {
 		int node_state = NODES[i].get_state();
 		if (node_state == 4) {
-			if (guessTrue(NODES[i].lose_immunity_rate)) node_state = 0;
-			temp[i] = node_state;
+			if (guessTrue(NODES[i].lose_immunity_rate)) temp[i] = 0;
 		}
+	}
+}
+
+void unchanged(vector<Node>& NODES, vector<int>& temp, int n) {
+	for (int i = 0; i < n; i++) {
+		int node_state = NODES[i].get_state();
+		if (temp[i] == -1) temp[i] = node_state;
 	}
 }
 
@@ -169,7 +181,7 @@ void record(vector<Node>& NODES, vector<double>& tmp, int n) {
 void record_all_state(vector<Node>& NODES, vector<vector<double>>& tmp, int n, int time) {
 	vector<double> num_state(6, 0.0);
 	for (auto i : NODES) {
-		num_state[i.get_state()]++;
+		num_state[(i.get_state() == 6)? 5 : i.get_state()]++;
 	}
 	for (auto i : num_state) {
 		i = i / double(n);
@@ -235,7 +247,7 @@ int modified_inf_process(Node i, double guess) {
 int modified_dea_process(Node i, double guess) {
 	
 	if (guess <= i.wake_up_rate) {
-		if (i.get_state() == 4) return 4;
+		if (i.get_state() == 6) return 4;
 		return 0;
 	}
 	else {
@@ -246,7 +258,7 @@ int modified_dea_process(Node i, double guess) {
 
 int modified_rec_process(Node i, double guess) {
 	
-	if (guess <= i.death_rate) return 5;
+	if (guess <= i.death_rate) return 6;
 	else if (guess <= i.death_rate + i.lose_immunity_rate) return 0;
 	else return 4;
 }
@@ -257,6 +269,7 @@ int modified_rec_process(Node i, double guess) {
 //3 : infected 
 //4 : recovered
 //5:  death
+//6:  recover to death
 
 void Judgement(vector<int>& temp, vector<Node>& NODES, vector<vector<int>> adj_matrix, Physical_network& P, int n) {
 	static default_random_engine e;
@@ -282,6 +295,9 @@ void Judgement(vector<int>& temp, vector<Node>& NODES, vector<vector<int>> adj_m
 			temp[i] = modified_dea_process(NODES[i], guess);
 			break;
 		case 5:
+			temp[i] = modified_rec_process(NODES[i], guess);
+			break;
+		case 6:
 			temp[i] = modified_rec_process(NODES[i], guess);
 			break;
 		}

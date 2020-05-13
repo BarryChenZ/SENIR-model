@@ -174,6 +174,9 @@ public:
 		if (y > max_y || y < 0) y = NODES[number].get_position_y() - velocity * cos(direction);
 		NODES[number].set_position(x, y);
 	}
+	double get_velocity() {
+		return velocity;
+	}
 };
 
 //Identiyty mobility model
