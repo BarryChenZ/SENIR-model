@@ -14,6 +14,8 @@
 
 using namespace std;
 
+#define PI acos(-1)
+
 double Uniform_distri(double min, double max) {
 	double x = (double)rand() / (RAND_MAX + 1.0);
 	double res = x * (max - min) + min;
@@ -148,8 +150,8 @@ private:
 	int number;
 	double velocity;
 	double direction;
-	double chi_v = 0.99, mu_v = 0.0;
-	double chi_d = 0.99, mu_d = 0.0;
+	double chi_v = 0.85, mu_v = 10.0;//chi = alpha,mu = mean
+	double chi_d = 0.85, mu_d = (1/3)* PI;//degree 60
 	double chi_s = 1;
 	double mu = 5.0, sigma = 2.0;
 	int max_x = 1000, max_y = 1000;
@@ -157,9 +159,27 @@ public:
 	Gauss_Markov(int ID) {
 		number = ID;
 	}
+	Gauss_Markov() {}
+
+	double change_velocity(double v) {
+		std::default_random_engine generator;
+		std::normal_distribution<double> distribution(mu, sigma);
+		//t-1 to t
+		v = chi_v * v + (1 - chi_v)*mu_v + chi_s * (distribution(generator)*sqrt(1 - pow(chi_v, 2)));
+		return v;
+	}
+	void initial_v(vector<Node_a>& NODES_A) {
+		for (int i = 0; i < NODES_A.size(); i++) {
+			for (int j = 0; j < NODES_A[i].v.size(); i++) {
+				NODES_A[i].v[j] = mu_v;
+			}
+		}
+		return;
+	}
 	void Set_v() {
 		std::default_random_engine generator;
 		std::normal_distribution<double> distribution(mu, sigma);
+		//t-1 to t
 		velocity = chi_v * velocity + (1 - chi_v)*mu_v + chi_s * (distribution(generator)*sqrt(1 - pow(chi_v, 2)));
 	}
 	void Set_d() {

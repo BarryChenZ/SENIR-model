@@ -107,6 +107,12 @@ public:
 		}
 		return res;
 	}
+	double get_range() {//for mathmatics model
+		return range;
+	}
+	double area() {
+		return max_x * max_y;
+	}
 };
 
 class Social_network {
