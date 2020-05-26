@@ -206,14 +206,14 @@ void update(vector<double>& tmp, vector<double>& state) {
 }
 void process_a(vector<Node_a> NODES_A) {
 	vector<vector<double>> tmp(NODES_A.size(), vector<double>(6, 0));//SENIRD
-	double E, N, I;
+	double E = 0, N = 0, I = 0;
 	Gauss_Markov GM = Gauss_Markov();
 	//initial test only 3ºØdegree 50 20 10/10% 30% 60%
 	NODES_A.resize(3);
 	NODES_A[0].v.resize(number * 0.1), NODES_A[0].degree = 50;
 	NODES_A[1].v.resize(number * 0.3), NODES_A[1].degree = 20; 
 	NODES_A[2].v.resize(number * 0.6), NODES_A[2].degree = 10;
-	GM.initial_v(NODES_A);
+	for(int i = 0; i < NODES_A.size(); i++) GM.initial_v(NODES_A[i].v);
 	int t = 0;
 	double area = max_x * max_y;
 

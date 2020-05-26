@@ -205,10 +205,10 @@ float q_RS = 0.25, q_RD = 0.0125;
 float q_SN = 0.4, q_SR = 0.15, q_SD = 0.0125;
 float q_NR = 0.1, q_NI = 0.2, q_ND = 0.0125;
 float q_IR = 0.1, q_ID = 0.05;
-float omega, mu = 0.01;
+float omega_4, mu = 0.01;
 int k = 20; float alpha_k = 1, delta_k;//delta_k = k, C, function, k = 20 挡狦ゑ耕非,狦k常
 void omega_function() {
-	omega = (1 / (k*alpha_k)) * alpha_k * delta_k * I_node_4;
+	omega_4 = (1 / (k*alpha_k)) * alpha_k * delta_k * I_node_4;
 	return;
 }
 void delta_k_function() {
@@ -216,11 +216,11 @@ void delta_k_function() {
 	return;
 }
 float S_process_4() {
-	float tmp = S_node_4 + q_RS * R_node_4 - q_SN * omega*S_node_4 - q_SR * S_node_4 - q_SD * S_node_4;
+	float tmp = S_node_4 + q_RS * R_node_4 - q_SN * omega_4*S_node_4 - q_SR * S_node_4 - q_SD * S_node_4;
 	return tmp;
 }
 float N_process_4() {
-	float tmp = N_node_4 + q_SN * omega*S_node_4 - q_NI * N_node_4 - q_ND * N_node_4;
+	float tmp = N_node_4 + q_SN * omega_4*S_node_4 - q_NI * N_node_4 - q_ND * N_node_4;
 	return tmp;
 }
 float I_process_4() {
@@ -260,7 +260,7 @@ void SNIRD_model() {
 float S_node_5 = 1-0.05, I_node_5 = 0.05, R_node_5 = 0, S1_node_5 = 0, I1_node_5 = 0, R1_node_5 = 0;
 float E_node_5 = 0, D_node_5 = 0 , Q_node_5 = 0;
 float p_Nw = 0.1, p_Ns = 0.02, p_Nr = 0.02, p_Nq = 0.2, p_Mt = 0.6, p_Md = 0.04;//pNq = 0.9 pNs = 0.4
-float a, b, alpha = 0.3, beta = 0.3, gamma = 0.6, xi = 0.3, p = 0.3;//3把计︽安砞
+float a, b, alpha = 0.3, beta = 0.3, gamma_5 = 0.6, xi = 0.3, p = 0.3;//3把计︽安砞
 void a_function() {
 	float omega_1 = (1 - I_node_5) / (3.14 * 10000);
 	a = 2 * sqrt(omega_1*3.14) * 50;
@@ -282,7 +282,7 @@ float S1_process_5() {
 	return res;
 }
 float I_process_5() {
-	float tmp = gamma * E_node_5 - (p_Md+p_Ns)*I_node_5 + p_Nw * I1_node_5 - p_Nq * I_node_5 - beta * p_Nr*I_node_5;
+	float tmp = gamma_5 * E_node_5 - (p_Md+p_Ns)*I_node_5 + p_Nw * I1_node_5 - p_Nq * I_node_5 - beta * p_Nr*I_node_5;
 	float res = I_node_5 + tmp;
 	return res;
 }
@@ -312,7 +312,7 @@ float Q_process_5() {
 	return res;
 }
 float E_process_5() {
-	float tmp = alpha * p_Mt*(a*sqrt(I_node_5) + b)*S_node_5 - p * E_node_5 - gamma * E_node_5;
+	float tmp = alpha * p_Mt*(a*sqrt(I_node_5) + b)*S_node_5 - p * E_node_5 - gamma_5 * E_node_5;
 	float res = E_node_5 + tmp;
 	return res;
 } 
