@@ -11,7 +11,7 @@
 #define PI acos(-1)
 using namespace std;
 
-struct Node_a{//for analytical
+struct Node_a {//for analytical
 	int num, degree;
 	double Area_i, Op_k;
 	vector<double> state;
@@ -31,12 +31,13 @@ double prob_NI = 0.4;
 //wake_up_rate, Loss_imu_rate, Recover_rate
 //death_rare, extra_death_rate
 double omega = 0.4;
+double omega_r = 0.2;
 double gamma = 0.3;
 double lambda = 0.2;
 double delta = 0.3;
 double ex_delta = 0.05;
 
-void computeArea(Node_a i, Gauss_Markov GM, Physical_network P) {
+void computeArea_OpK(vector<Node_a>& NODES_A, Physical_network P, Node_a i) {
 	double mean_v = 0;
 	for (int j = 0; j < i.v.size(); j++) {
 		mean_v += i.v[j];
@@ -44,7 +45,13 @@ void computeArea(Node_a i, Gauss_Markov GM, Physical_network P) {
 	mean_v /= i.num;
 
 	i.Area_i = PI * pow(P.get_range(), 2) + 2 * P.get_range()*mean_v * 1;//t = 1;
+	double total_link = 0.0;
+	for (int j = 0; j < NODES_A.size(); j++){
+		total_link += NODES_A[j].num * NODES_A[j].degree;
+	}
+	i.Op_k = (i.degree * i.num) / total_link;
 
+	//cout << i.Area_i << " " << i.Op_k << endl;
 	return;
 }
 /*
@@ -193,30 +200,54 @@ void Judgement(vector<int>& temp, vector<Node_a>& NODES_A) {
 }
 */
 void Compute_prob_frac(double E, double N, double I, double Op_k, double area, double area_i, vector<double>& tmp, vector<double> state) {
+	//case 1 delta_ex != 0
+	//case 2 without omega_r
+	//case 3 delta_ex = 0
 	tmp[0] = -1 * contact_rate*success_prob*Op_k*(E + I)*state[0] - (scan_rate*(area_i*I) / area)*state[0] - delta * state[0] + omega * state[5] + lambda * state[4];
 	tmp[1] = contact_rate * success_prob*Op_k*(E + I)*state[0] - Op_k * I*open_rate*state[1] - delta * state[1];
 	tmp[2] = (scan_rate*(area_i*I) / area)*state[0] - (1 - collision_cost * (I / area))*prob_NI*state[2] - (delta + ex_delta)*state[2];
+	// tmp[2] = (scan_rate*(area_i*I) / area)*state[0] - (1 - collision_cost * (I / area))*prob_NI*state[2] - (delta)*state[2];//case 3
 	tmp[3] = Op_k * I*open_rate*state[1] + (1 - collision_cost * (I / area))*prob_NI*state[2] - (delta + ex_delta + gamma)*state[3];
+	// tmp[3] = Op_k * I*open_rate*state[1] + (1 - collision_cost * (I / area))*prob_NI*state[2] - (delta + gamma)*state[3];//case 3
 	tmp[4] = gamma * state[3] - (delta + lambda)*state[4];
+	//tmp[4] = gamma * state[3] - (delta + lambda)*state[4] + omega_r * state[5]; //case 2
 	tmp[5] = delta * (state[0] + state[1] + state[4]) + (delta + ex_delta)*(state[2] + state[3])-omega*state[5];
-}
+	//tmp[5] = delta * (state[0] + state[1] + state[4]) + (delta + ex_delta)*(state[2] + state[3])-omega*state[5] -omega_r * state[5];//case 2
+	//tmp[5] = delta * (state[0] + state[1] + state[4]) + (delta)*(state[2] + state[3])-omega*state[5] * state[5];//case 3
+}	
 void update(vector<double>& tmp, vector<double>& state) {
-	for (int i = 0; i < state.size(); i++) state[i] = tmp[i];
+	for (int i = 0; i < state.size(); i++) state[i] = state[i] + tmp[i];
 	return;
 }
-void process_a(vector<Node_a> NODES_A) {
-	vector<vector<double>> tmp(NODES_A.size(), vector<double>(6, 0));//SENIRD
-	double E = 0, N = 0, I = 0;
+void Printing(vector<Node_a> NODES_A) {
+	vector<double> res(6, 0.0);
+	for (int i = 0; i < NODES_A.size(); i++) {
+		for (int j = 0; j < NODES_A[i].state.size(); j++) {//fraction
+			res[j] += ((NODES_A[i].state[j])*NODES_A[i].num)/number;
+		}
+	}
+	for (int i = 0; i < res.size(); i++) cout << res[i] << " ";
+	cout << endl;
+}
+void process_a(vector<Node_a> NODES_A, Physical_network P) {
+	double E = 0, N = 0, I = 0;//Total
 	Gauss_Markov GM = Gauss_Markov();
 	//initial test only 3種degree 50 20 10/10% 30% 60%
 	NODES_A.resize(3);
-	NODES_A[0].v.resize(number * 0.1), NODES_A[0].degree = 50;
-	NODES_A[1].v.resize(number * 0.3), NODES_A[1].degree = 20; 
-	NODES_A[2].v.resize(number * 0.6), NODES_A[2].degree = 10;
+	vector<vector<double>> tmp(NODES_A.size(), vector<double>(6, 0));//SENIRD:012345
+	NODES_A[0].v.resize(number * 0.1), NODES_A[0].num = number * 0.1, NODES_A[0].degree = 50;
+	NODES_A[1].v.resize(number * 0.3), NODES_A[1].num = number * 0.3, NODES_A[1].degree = 20;
+	NODES_A[2].v.resize(number * 0.6), NODES_A[2].num = number * 0.6, NODES_A[2].degree = 10;
 	for(int i = 0; i < NODES_A.size(); i++) GM.initial_v(NODES_A[i].v);
+	//state initialize 1% infection at t = 0
+	for (int i = 0; i < NODES_A.size(); i++) {
+		NODES_A[i].state.resize(6, 0.0);
+		NODES_A[i].state[0] = 1.0 - 0.01, NODES_A[i].state[3] = 0.01;
+	}
+	
 	int t = 0;
 	double area = max_x * max_y;
-
+	
 	// start
 	while (t < total_time) {
 		//Mobility model
@@ -228,20 +259,22 @@ void process_a(vector<Node_a> NODES_A) {
 
 		//first calculating total fraction of ENI
 		for (int i = 0; i < NODES_A.size(); i++) {
-			E += (NODES_A[i].state[1] * NODES_A[i].num)/number;
-			N += (NODES_A[i].state[2] * NODES_A[i].num)/number;
-			I += (NODES_A[i].state[3] * NODES_A[i].num)/number;
+			E += (NODES_A[i].state[1] * NODES_A[i].num) / number;
+			N += (NODES_A[i].state[2] * NODES_A[i].num) / number;
+			I += (NODES_A[i].state[3] * NODES_A[i].num) / number;
 		}
-		//Calculating the fraction of degree group
+		//Calculating the fraction change of degree group
 		for (int i = 0; i < NODES_A.size(); i++) {
-			Compute_prob_frac(E,N,I, NODES_A[i].Op_k, area, NODES_A[i].Area_i, tmp[i],NODES_A[i].state);
+			computeArea_OpK(NODES_A, P, NODES_A[i]);//Area會變 但是Op_k不變
+			Compute_prob_frac(E, N, I, NODES_A[i].Op_k, area, NODES_A[i].Area_i, tmp[i], NODES_A[i].state);
 		}
-
+		//print fraction of state
+		cout << t << endl;
+		Printing(NODES_A);
 		//updating
 		for (int i = 0; i < NODES_A.size(); i++) {
 			update(tmp[i], NODES_A[i].state);
 		}
-		
 		t++;
 	}
 }
