@@ -18,24 +18,24 @@ struct Node_a {//for analytical
 	vector<double> v;//velocity for node
 };
 //parameters
-int number = 1000;
-int total_time = 100;
+int number = 1000; // 4
+int total_time = 50;
 double max_x = 1000, max_y = 1000;
 
-double contact_rate = 0.4;//Rate_c
-double success_prob = 0.4;//P_sucess
-double open_rate = 0.9;//Rate_o
-double scan_rate = 0.7;//
+double contact_rate = 0.5;//Rate_c
+double success_prob = 0.5;//P_sucess
+double open_rate = 0.8;//Rate_o
+double scan_rate = 0.08;//
 double collision_cost = 0.2;
-double prob_NI = 0.7;
+double prob_NI = 0.8;
 //wake_up_rate, Loss_imu_rate, Recover_rate
 //death_rare, extra_death_rate
-double omega = 0.6;
+double omega = 0.3;
 double omega_r = 0.2;
-double gamma = 0.6;
-double lambda = 0.6;
-double delta = 0.08;
-double ex_delta = 0.005;
+double gamma = 0.1;
+double lambda = 0.1;
+double delta = 0.05;
+double ex_delta = 0.01;
 
 void computeArea_OpK(vector<Node_a>& NODES_A, Physical_network P, Node_a& i) {
 	double mean_v = 0;
@@ -50,8 +50,6 @@ void computeArea_OpK(vector<Node_a>& NODES_A, Physical_network P, Node_a& i) {
 		total_link += NODES_A[j].num * NODES_A[j].degree;
 	}
 	i.Op_k = (i.degree * i.num) / total_link;
-
-	//cout << i.Area_i << " " << i.Op_k << endl;
 	return;
 }
 /*
@@ -203,12 +201,12 @@ void Compute_prob_frac(double E, double N, double I, double Op_k, double area, d
 	//case 1 delta_ex != 0 without omega_r
 	//case 2 with omega_r
 	//case 3 delta_ex = 0
-	cout << Op_k << " " << area_i << endl;
-	tmp[0] = -1 * contact_rate*success_prob*Op_k*(E + I)*state[0] - (scan_rate*(area_i*((N+I)/area)))*state[0] - delta * state[0] + omega * state[5] + lambda * state[4];
+	//cout << Op_k << " " << area_i << endl;
+	tmp[0] = -1 * contact_rate*success_prob*Op_k*(E + I)*state[0] - (scan_rate*(area_i/area *((N+I)*number)))*state[0] - delta * state[0] + omega * state[5] + lambda * state[4];//area_i * density *scan rate
 	tmp[1] = contact_rate*success_prob*Op_k*(E + I)*state[0] - Op_k*I*open_rate*state[1] - delta * state[1];
-	tmp[2] = (scan_rate*(area_i*((N+I)/area)))*state[0] - (1-collision_cost*(I/area))*prob_NI*state[2] - (delta+ex_delta)*state[2];
+	tmp[2] = (scan_rate*(area_i/area *((N+I)*number)))*state[0] - (1-collision_cost*(I))*prob_NI*state[2] - (delta+ex_delta)*state[2];
 	// tmp[2] = (scan_rate*(area_i*I) / area)*state[0] - (1 - collision_cost * (I / area))*prob_NI*state[2] - (delta)*state[2];//case 3
-	tmp[3] = Op_k*I*open_rate*state[1] + (1-collision_cost*(I/area))*prob_NI*state[2] - (delta + ex_delta + gamma)*state[3];
+	tmp[3] = Op_k*I*open_rate*state[1] + (1-collision_cost*(I))*prob_NI*state[2] - (delta + ex_delta + gamma)*state[3];
 	// tmp[3] = Op_k * I*open_rate*state[1] + (1 - collision_cost * (I / area))*prob_NI*state[2] - (delta + gamma)*state[3];//case 3
 	tmp[4] = gamma*state[3]-(delta+lambda)*state[4];
 	//tmp[4] = gamma * state[3] - (delta + lambda)*state[4] + omega_r * state[5]; //case 2
@@ -218,7 +216,7 @@ void Compute_prob_frac(double E, double N, double I, double Op_k, double area, d
 }	
 void update(vector<double>& tmp, vector<double>& state) {
 	for (int i = 0; i < state.size(); i++) {
-		state[i] = (state[i] + tmp[i] <= 0.0)? 0.0 : state[i] + tmp[i];
+		state[i] = (state[i] + tmp[i] <= 0.0) ? 0.0 : state[i] + tmp[i];
 		//cout << tmp[i] << " ";
 	}
 	//cout << endl;
@@ -228,14 +226,14 @@ void Printing(vector<Node_a> NODES_A) {
 	vector<double> res(6, 0.0);
 	for (int i = 0; i < NODES_A.size(); i++) {
 		for (int j = 0; j < NODES_A[i].state.size(); j++) {//fraction
-			res[j] += ((NODES_A[i].state[j])*NODES_A[i].num)/number;
+			res[j] += ((NODES_A[i].state[j])* (double)NODES_A[i].num)/(double)number;
 		}
 	}
 	for (int i = 0; i < res.size(); i++) cout << res[i] << " ";
 	cout << endl;
 }
 void process_a(vector<Node_a> NODES_A, Physical_network P) {
-	double E = 0.0, N = 0.0, I = 0.0;//Total
+	double E = 0.0, N = 0.0, I = 0.0, TE = 0.0, TN = 0.0, TI = 0.0;//frac and total
 	Gauss_Markov GM = Gauss_Markov();
 	//initial test only 3種degree 50 20 10/10% 30% 60%
 	NODES_A.resize(3);
@@ -244,10 +242,10 @@ void process_a(vector<Node_a> NODES_A, Physical_network P) {
 	NODES_A[1].v.resize(number * 0.3), NODES_A[1].num = number * 0.3, NODES_A[1].degree = 20;
 	NODES_A[2].v.resize(number * 0.6), NODES_A[2].num = number * 0.6, NODES_A[2].degree = 10;
 	for(int i = 0; i < NODES_A.size(); i++) GM.initial_v(NODES_A[i].v);
-	//state initialize 1% infection at t = 0
+	//state initialize 10% infection at t = 0
 	for (int i = 0; i < NODES_A.size(); i++) {
 		NODES_A[i].state.resize(6, 0.0);
-		NODES_A[i].state[0] = 1.0 - 0.01, NODES_A[i].state[3] = 0.01;
+		NODES_A[i].state[0] = 1.0 - 0.1, NODES_A[i].state[3] = 0.1;
 	}
 	
 	int t = 0;
@@ -255,6 +253,8 @@ void process_a(vector<Node_a> NODES_A, Physical_network P) {
 	
 	// start
 	while (t < total_time) {
+		E = 0.0, N = 0.0, I = 0.0;
+		TE = 0.0, TN = 0.0, TI = 0.0;
 		//Mobility model
 		for (int i = 0; i < NODES_A.size(); i++) {
 			for (int j = 0; j < NODES_A[i].v.size(); j++) {
@@ -264,10 +264,16 @@ void process_a(vector<Node_a> NODES_A, Physical_network P) {
 
 		//first calculating total fraction of ENI
 		for (int i = 0; i < NODES_A.size(); i++) {
-			E += (NODES_A[i].state[1] * NODES_A[i].num) / number;
-			N += (NODES_A[i].state[2] * NODES_A[i].num) / number;
-			I += (NODES_A[i].state[3] * NODES_A[i].num) / number;
+			//cout << NODES_A[i].state[1] * (double)NODES_A[i].num /number << endl;
+			E += (double)(NODES_A[i].state[1] * (double)NODES_A[i].num) / (double)number;
+			N += (double)(NODES_A[i].state[2] * (double)NODES_A[i].num) / (double)number;
+			I += (double)(NODES_A[i].state[3] * (double)NODES_A[i].num) / (double)number;
+			TE += NODES_A[i].state[1] * (double)NODES_A[i].num;
+			TN += NODES_A[i].state[2] * (double)NODES_A[i].num;
+			TI += NODES_A[i].state[3] * (double)NODES_A[i].num;
 		}
+		cout << "TE: " << TE << " TN:" << TN << " TI:" << TI << endl;
+		cout << "E:" << E << " N:" << N << " I:" << I << endl;
 		//Calculating the fraction change of degree group
 		for (int i = 0; i < NODES_A.size(); i++) {
 			computeArea_OpK(NODES_A, P, NODES_A[i]);//Area會變 但是Op_k不變
@@ -282,4 +288,5 @@ void process_a(vector<Node_a> NODES_A, Physical_network P) {
 		}
 		t++;
 	}
+	cout << NODES_A[0].Area_i << " " << NODES_A[0].Op_k << endl;
 }

@@ -150,8 +150,8 @@ private:
 	int number;
 	double velocity;
 	double direction;
-	double chi_v = 0.85, mu_v = 10.0;//chi = alpha,mu = mean
-	double chi_d = 0.85, mu_d = (1/3)* PI;//degree 60
+	double chi_v = 0.5, mu_v = 10.0;//chi = alpha,mu = mean
+	double chi_d = 0.5, mu_d = (1/3)* PI;//degree 60
 	double chi_s = 1;
 	double mu = 0.0, sigma = 5.0; // sigma¶V¤j¯B°Ê¶V¤j
 	int max_x = 1000, max_y = 1000;
