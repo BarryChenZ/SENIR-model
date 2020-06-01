@@ -183,10 +183,9 @@ void record_all_state(vector<Node>& NODES, vector<vector<double>>& tmp, int n, i
 	for (auto i : NODES) {
 		num_state[(i.get_state() == 6)? 5 : i.get_state()]++;
 	}
-	for (auto i : num_state) {
-		i = i / double(n);
-		tmp[time].push_back(i);
-		cout << i << " ";
+	for (int i = 0; i < num_state.size(); i++) {
+		tmp[time][i] = num_state[i] / double(n);
+		cout << num_state[i] / double(n) << " ";
 	}
 	cout << endl;
 }
@@ -215,7 +214,7 @@ int modified_sus_process(vector<Node>& NODES, vector<int>& temp, vector<vector<i
 	eff_expose = 1 - pow(1 - NODES[i].exposed_rate, infected_neighbor_num_e);
 	eff_iN = 1 - pow(1 - NODES[i].iNsidious_rate, infected_neighbor_num_n);
 		
-	//cout << infected_neighbor_num_n << endl;
+	cout << eff_expose << " " << eff_iN << endl;
 	if (guess <= eff_expose) return 1;
 	else if (guess <= eff_expose + eff_iN) return 2;
 	else if (guess <= eff_expose + eff_iN + NODES[i].death_rate) return 5;
@@ -232,8 +231,8 @@ int modified_ex_process(Node i, double guess) {
 
 int modified_iN_process(Node i, double guess) {
 	
-	if (guess <= i.infected_rate) return 3;
-	else if (guess <= i.infected_rate + i.death_rate + i.ex_death_rate) return 5;
+	if (guess <= i.infected_rate_2) return 3;
+	else if (guess <= i.infected_rate_2 + i.death_rate + i.ex_death_rate) return 5;
 	else return 2;
 }
 
@@ -258,7 +257,7 @@ int modified_dea_process(Node i, double guess) {
 
 int modified_rec_process(Node i, double guess) {
 	
-	if (guess <= i.death_rate) return 6;
+	if (guess <= i.death_rate) return 5;//5 without omega_r, 6 with omega_r
 	else if (guess <= i.death_rate + i.lose_immunity_rate) return 0;
 	else return 4;
 }

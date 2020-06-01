@@ -33,15 +33,17 @@ private:
 	double x_pos, y_pos;
 public:
 	vector<int> neighbor_set;
-	double infected_rate = 0.32;
-	double received_rate = 0.228;
-	double exposed_rate = 0.6;
-	double iNsidious_rate = 0.8;
-	double recovered_rate = 0.083;
-	double death_rate = 0.02;
-	double ex_death_rate = 0.005;
-	double wake_up_rate = 0.2;
-	double lose_immunity_rate = 0.2;
+	double infected_rate = 0.04;
+	double infected_rate_2 = 0.72;
+	double received_rate = 0.02;
+	double exposed_rate = 0.015;
+	double iNsidious_rate = 0.05;
+	double recovered_rate = 0.1;
+	double death_rate = 0.05;
+	double ex_death_rate = 0.01;
+	double wake_up_rate = 0.3;
+	double wake_up_rate_r = 0.2;
+	double lose_immunity_rate = 0.1;
 
 	Node(int ID) {
 		number = ID;
@@ -124,7 +126,15 @@ public:
 
 	Social_network(int num){
 		nodes = num;
-		initial();
+		//initial();
+
+		//fixed degree
+		vector<int> degree(num, 0);
+		for (int i = 0; i < 100; i++) degree[i] = 50;
+		for (int i = 100; i < 400; i++) degree[i] = 20;
+		for (int i = 400; i < 1000; i++) degree[i] = 10;
+		random_shuffle(degree.begin(), degree.end());
+		initial_fixedDegree(degree);
 	}
 	void initial() {
 		//srand((unsigned)time(NULL));
@@ -162,6 +172,18 @@ public:
 		//cout << total_link << endl;
 		return;
 	}
+	void initial_fixedDegree(vector<int> degree) {
+		adj_matrix.resize(nodes, vector<int>(nodes));
+		for (int i = 0; i < nodes; i++) {
+			for (int j = 0; j < nodes; j++) {
+				if (degree[i] > 0 && degree[j] > 0) {
+					degree[i]--, degree[j]--;
+					adj_matrix[i][j] = 1, adj_matrix[j][i] = 1;
+				}
+			}
+		}
+	}
+
 	bool isValid(double prob) {
 		double x = (double)rand() / (RAND_MAX + 1.0);
 		if (x < prob) return true;

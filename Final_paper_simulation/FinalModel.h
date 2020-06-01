@@ -25,7 +25,7 @@ double max_x = 1000, max_y = 1000;
 double contact_rate = 0.5;//Rate_c
 double success_prob = 0.5;//P_sucess
 double open_rate = 0.8;//Rate_o
-double scan_rate = 0.08;//
+double scan_rate = 0.01;//
 double collision_cost = 0.2;
 double prob_NI = 0.8;
 //wake_up_rate, Loss_imu_rate, Recover_rate
@@ -38,18 +38,18 @@ double delta = 0.05;
 double ex_delta = 0.01;
 
 void computeArea_OpK(vector<Node_a>& NODES_A, Physical_network P, Node_a& i) {
-	double mean_v = 0;
+	double mean_v = 0.0;
 	for (int j = 0; j < i.v.size(); j++) {
 		mean_v += i.v[j];
 	}
-	mean_v = mean_v / i.num;
+	mean_v = mean_v / (double)i.num;
 	//cout << mean_v << " " << P.get_range() << endl;
 	i.Area_i = PI * pow(P.get_range(), 2) + 2 * P.get_range()*mean_v * 1;//t = 1;
 	double total_link = 0.0;
 	for (int j = 0; j < NODES_A.size(); j++){
 		total_link += NODES_A[j].num * NODES_A[j].degree;
 	}
-	i.Op_k = (i.degree * i.num) / total_link;
+	i.Op_k = (double)(i.degree * i.num) / total_link;
 	return;
 }
 /*
@@ -135,7 +135,7 @@ int Compute_D(Node_a i, double guess) {
 */
 void setting(Node i) {
 	omega = i.wake_up_rate;
-	received_rate = i.received_rate;
+	//received_rate = i.received_rate;
 	lambda = i.lose_immunity_rate;
 	delta = i.death_rate;
 	ex_delta = i.ex_death_rate;
@@ -247,8 +247,9 @@ void process_a(vector<Node_a> NODES_A, Physical_network P) {
 		NODES_A[i].state.resize(6, 0.0);
 		NODES_A[i].state[0] = 1.0 - 0.1, NODES_A[i].state[3] = 0.1;
 	}
-	
-	int t = 0;
+	cout << 0 << endl;
+	Printing(NODES_A);
+	int t = 1;
 	double area = max_x * max_y;
 	
 	// start
@@ -272,21 +273,25 @@ void process_a(vector<Node_a> NODES_A, Physical_network P) {
 			TN += NODES_A[i].state[2] * (double)NODES_A[i].num;
 			TI += NODES_A[i].state[3] * (double)NODES_A[i].num;
 		}
-		cout << "TE: " << TE << " TN:" << TN << " TI:" << TI << endl;
-		cout << "E:" << E << " N:" << N << " I:" << I << endl;
+		//cout << "TE: " << TE << " TN:" << TN << " TI:" << TI << endl;
+		//cout << "E:" << E << " N:" << N << " I:" << I << endl;
 		//Calculating the fraction change of degree group
 		for (int i = 0; i < NODES_A.size(); i++) {
 			computeArea_OpK(NODES_A, P, NODES_A[i]);//Area會變 但是Op_k不變
 			Compute_prob_frac(E, N, I, NODES_A[i].Op_k, area, NODES_A[i].Area_i, tmp[i], NODES_A[i].state);
 		}
-		//print fraction of state
-		cout << t << endl;
-		Printing(NODES_A);
 		//updating
 		for (int i = 0; i < NODES_A.size(); i++) {
 			update(tmp[i], NODES_A[i].state);
 		}
+		//print fraction of state
+		cout << t << endl;
+		Printing(NODES_A);
 		t++;
+		cout << contact_rate * success_prob*NODES_A[0].Op_k*(E + I) << " ";
+		cout << (scan_rate*(NODES_A[0].Area_i / area * ((N + I)*number))) << " ";
+		cout << NODES_A[0].Op_k * I*open_rate << " ";
+		cout << (1 - collision_cost * (I))*prob_NI << endl;
 	}
 	cout << NODES_A[0].Area_i << " " << NODES_A[0].Op_k << endl;
 }
