@@ -25,7 +25,7 @@ double max_x = 1000, max_y = 1000;
 double contact_rate = 0.5;//Rate_c
 double success_prob = 0.5;//P_sucess
 double open_rate = 0.8;//Rate_o
-double scan_rate = 0.01;//
+double scan_rate = 0.05;//
 double collision_cost = 0.2;
 double prob_NI = 0.8;
 //wake_up_rate, Loss_imu_rate, Recover_rate
@@ -36,6 +36,8 @@ double gamma = 0.1;
 double lambda = 0.1;
 double delta = 0.05;
 double ex_delta = 0.01;
+
+double new_node = 0.01;
 
 void computeArea_OpK(vector<Node_a>& NODES_A, Physical_network P, Node_a& i) {
 	double mean_v = 0.0;
@@ -197,22 +199,36 @@ void Judgement(vector<int>& temp, vector<Node_a>& NODES_A) {
 	return;
 }
 */
+//SENIRD or SEIRD model
 void Compute_prob_frac(double E, double N, double I, double Op_k, double area, double area_i, vector<double>& tmp, vector<double> state) {
 	//case 1 delta_ex != 0 without omega_r
 	//case 2 with omega_r
 	//case 3 delta_ex = 0
+	//case 4 SENIRD -> SEIRD model and D不會回溯 + alpha(有新點)
 	//cout << Op_k << " " << area_i << endl;
-	tmp[0] = -1 * contact_rate*success_prob*Op_k*(E + I)*state[0] - (scan_rate*(area_i/area *((N+I)*number)))*state[0] - delta * state[0] + omega * state[5] + lambda * state[4];//area_i * density *scan rate
-	tmp[1] = contact_rate*success_prob*Op_k*(E + I)*state[0] - Op_k*I*open_rate*state[1] - delta * state[1];
-	tmp[2] = (scan_rate*(area_i/area *((N+I)*number)))*state[0] - (1-collision_cost*(I))*prob_NI*state[2] - (delta+ex_delta)*state[2];
+	//S
+	tmp[0] = -1 * contact_rate*success_prob*Op_k*(E + I)*state[0] - (scan_rate*(area_i / area * ((E + I)*number)))*state[0] - delta * state[0] + lambda * state[4] - gamma * state[0] + new_node;//case 4
+	//tmp[0] = -1 * contact_rate*success_prob*Op_k*(E + I)*state[0] - (scan_rate*(area_i/area *((N+I)*number)))*state[0] - delta * state[0] + omega * state[5] + lambda * state[4];//area_i * density *scan rate
+	//E
+	tmp[1] = contact_rate * success_prob*Op_k*(E + I)*state[0]+ (scan_rate*(area_i / area * ((E + I)*number)))*state[0] - Op_k * I * open_rate*state[1] - (1 - collision_cost * (I))*prob_NI*state[1] - delta * state[1] - gamma * state[1];//case 4
+	//tmp[1] = contact_rate*success_prob*Op_k*(E + I)*state[0] - Op_k*I*open_rate*state[1] - delta * state[1];
+	//N
+	//tmp[2] = (scan_rate*(area_i/area *((N+I)*number)))*state[0] - (1-collision_cost*(I))*prob_NI*state[2] - (delta+ex_delta)*state[2];
 	// tmp[2] = (scan_rate*(area_i*I) / area)*state[0] - (1 - collision_cost * (I / area))*prob_NI*state[2] - (delta)*state[2];//case 3
-	tmp[3] = Op_k*I*open_rate*state[1] + (1-collision_cost*(I))*prob_NI*state[2] - (delta + ex_delta + gamma)*state[3];
+	//I
+	tmp[3] = Op_k * I*open_rate*state[1] + (1 - collision_cost * (I))*prob_NI*state[1] - (delta + ex_delta + gamma)*state[3];//case 4
+	//tmp[3] = Op_k*I*open_rate*state[1] + (1-collision_cost*(I))*prob_NI*state[2] - (delta + ex_delta + gamma)*state[3];
 	// tmp[3] = Op_k * I*open_rate*state[1] + (1 - collision_cost * (I / area))*prob_NI*state[2] - (delta + gamma)*state[3];//case 3
-	tmp[4] = gamma*state[3]-(delta+lambda)*state[4];
+	//R
+	tmp[4] = gamma * state[3] +gamma * state[0] + gamma * state[1] - (delta + lambda)*state[4]; // case 4
+	//tmp[4] = gamma*state[3]-(delta+lambda)*state[4];
 	//tmp[4] = gamma * state[3] - (delta + lambda)*state[4] + omega_r * state[5]; //case 2
-	tmp[5] = delta*(state[0]+state[1]+state[4])+(delta+ex_delta)*(state[2]+state[3])-omega*state[5];
+	//D
+	tmp[5] = delta * (state[0] + state[1] + state[4]) + (delta + ex_delta)*state[3] - new_node;//case 4
+	//tmp[5] = delta*(state[0]+state[1]+state[4])+(delta+ex_delta)*(state[2]+state[3])-omega*state[5];
 	//tmp[5] = delta * (state[0] + state[1] + state[4]) + (delta + ex_delta)*(state[2] + state[3])-omega*state[5] -omega_r * state[5];//case 2
 	//tmp[5] = delta * (state[0] + state[1] + state[4]) + (delta)*(state[2] + state[3])-omega*state[5] * state[5];//case 3
+
 }	
 void update(vector<double>& tmp, vector<double>& state) {
 	for (int i = 0; i < state.size(); i++) {
@@ -223,7 +239,8 @@ void update(vector<double>& tmp, vector<double>& state) {
 	return;
 }
 void Printing(vector<Node_a> NODES_A) {
-	vector<double> res(6, 0.0);
+	
+	vector<double> res(6, 0.0);//SENIRD
 	for (int i = 0; i < NODES_A.size(); i++) {
 		for (int j = 0; j < NODES_A[i].state.size(); j++) {//fraction
 			res[j] += ((NODES_A[i].state[j])* (double)NODES_A[i].num)/(double)number;
@@ -289,8 +306,8 @@ void process_a(vector<Node_a> NODES_A, Physical_network P) {
 		Printing(NODES_A);
 		t++;
 		cout << contact_rate * success_prob*NODES_A[0].Op_k*(E + I) << " ";
-		cout << (scan_rate*(NODES_A[0].Area_i / area * ((N + I)*number))) << " ";
-		cout << NODES_A[0].Op_k * I*open_rate << " ";
+		cout << (scan_rate*(NODES_A[0].Area_i / area * ((E + I)*number))) << " ";
+		cout << NODES_A[0].Op_k*I*open_rate << " ";
 		cout << (1 - collision_cost * (I))*prob_NI << endl;
 	}
 	cout << NODES_A[0].Area_i << " " << NODES_A[0].Op_k << endl;

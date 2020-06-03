@@ -37,7 +37,7 @@ public:
 	double infected_rate_2 = 0.72;
 	double received_rate = 0.02;
 	double exposed_rate = 0.015;
-	double iNsidious_rate = 0.05;
+	double iNsidious_rate = 0.015;
 	double recovered_rate = 0.1;
 	double death_rate = 0.05;
 	double ex_death_rate = 0.01;
@@ -70,6 +70,9 @@ public:
 	}
 	int get_state() {
 		return status;
+	}
+	int get_number() {
+		return number;
 	}
 	void change_state(int state) {
 		status = state;

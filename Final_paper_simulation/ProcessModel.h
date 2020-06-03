@@ -19,7 +19,7 @@ double iNsidious_rate = 0.8;
 double recovered_rate = 0.083; 
 double infected_sim_array[4] = { 0.2, 0.3, 0.4, 0.5 };
 double death_rate = 0.2;
-
+double new_rate = 0.01;// new rate = leave rate
 bool guessTrue(double probability) {
 	static default_random_engine e;
 	static uniform_real_distribution<double> u(0, 1);
@@ -192,6 +192,7 @@ void record_all_state(vector<Node>& NODES, vector<vector<double>>& tmp, int n, i
 
 //Modified simulaiton idea.
 //focus on node current state. Each node in the network will decided that which state to go. 
+//Case 1 : SENIRD, Case 2 : SEIRD
 int modified_sus_process(vector<Node>& NODES, vector<int>& temp, vector<vector<int>> adj_matrix, Physical_network& P, int n, int i, double guess) {
 	//to E N D S
 	double eff_expose;
@@ -210,26 +211,49 @@ int modified_sus_process(vector<Node>& NODES, vector<int>& temp, vector<vector<i
 			//cout << 1;
 		}
 	}
-
+	/*
+	for (int j = 0; j < infected_neighbor_num_e; j++) {
+		if (guessTrue(NODES[i].exposed_rate)) return 1;
+	}
+	for (int j = 0; j < infected_neighbor_num_n; j++) {
+		if (guessTrue(NODES[i].iNsidious_rate)) return 2;
+	}
+	if (guess < NODES[i].death_rate) return 5;
+	return 0;
+	*/
+	
 	eff_expose = 1 - pow(1 - NODES[i].exposed_rate, infected_neighbor_num_e);
 	eff_iN = 1 - pow(1 - NODES[i].iNsidious_rate, infected_neighbor_num_n);
-		
-	cout << eff_expose << " " << eff_iN << endl;
+	
+	//cout << eff_expose << " " << eff_iN << endl;
+	/*
 	if (guess <= eff_expose) return 1;
 	else if (guess <= eff_expose + eff_iN) return 2;
 	else if (guess <= eff_expose + eff_iN + NODES[i].death_rate) return 5;
+	else return 0;
+	*/
+	
+	if (guess <= eff_expose + eff_iN) return 1;//case 2
+	else if (guess <= eff_expose + eff_iN + NODES[i].recovered_rate) return 4;
+	else if (guess <= eff_expose + eff_iN + NODES[i].recovered_rate + NODES[i].death_rate) return 5;
 	else return 0;
 	
 }
 // Particular node i
 int modified_ex_process(Node i, double guess) {
-	
+
+	if (guess <= i.infected_rate + i.infected_rate_2) return 3; // case 2
+	else if (guess <= i.infected_rate + i.infected_rate_2 + i.recovered_rate) return 4;
+	else if (guess <= i.infected_rate + i.infected_rate_2 + i.recovered_rate + i.death_rate) return 5;
+	else return 1;
+	/*
 	if (guess <= i.infected_rate) return 3;
 	else if (guess <= i.infected_rate + i.death_rate) return 5;
 	else return 1;
+	*/
 }
 
-int modified_iN_process(Node i, double guess) {
+int modified_iN_process(Node i, double guess) {//case 2 不需要
 	
 	if (guess <= i.infected_rate_2) return 3;
 	else if (guess <= i.infected_rate_2 + i.death_rate + i.ex_death_rate) return 5;
@@ -243,7 +267,7 @@ int modified_inf_process(Node i, double guess) {
 	else return 3;
 }
 
-int modified_dea_process(Node i, double guess) {
+int modified_dea_process(Node i, double guess) {//case 2 不需要
 	
 	if (guess <= i.wake_up_rate) {
 		if (i.get_state() == 6) return 4;
@@ -261,7 +285,18 @@ int modified_rec_process(Node i, double guess) {
 	else if (guess <= i.death_rate + i.lose_immunity_rate) return 0;
 	else return 4;
 }
+void Leaving_and_Coming(vector<int>& temp, int num) {
+	int number = new_rate * num;
+	vector<int>  record_D;
+	for (int i = 0; i < temp.size(); i++) {
+		if (temp[i] == 5) record_D.push_back(i);
+	}
+	random_shuffle(record_D.begin(), record_D.end());
+	if (number > record_D.size()) for (int i = 0; i < record_D.size(); i++) temp[record_D[i]] = 0;
+	else for (int i = 0; i < number; i++) temp[record_D[i]] = 0;
 
+	return;
+}
 //0 : sus 
 //1 : expose 
 //2 : iNsidious 
