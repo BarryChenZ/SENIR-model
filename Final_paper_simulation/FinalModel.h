@@ -238,7 +238,7 @@ void update(vector<double>& tmp, vector<double>& state) {
 	//cout << endl;
 	return;
 }
-void Printing(vector<Node_a> NODES_A) {
+void Printing(vector<Node_a> NODES_A, vector<double>& res1) {
 	
 	vector<double> res(6, 0.0);//SENIRD
 	for (int i = 0; i < NODES_A.size(); i++) {
@@ -246,10 +246,16 @@ void Printing(vector<Node_a> NODES_A) {
 			res[j] += ((NODES_A[i].state[j])* (double)NODES_A[i].num)/(double)number;
 		}
 	}
-	for (int i = 0; i < res.size(); i++) cout << res[i] << " ";
+	for (int i = 0; i < res.size(); i++) {
+		res1[i] = res[i];
+		cout << res[i] << " ";
+	}
 	cout << endl;
 }
-void process_a(vector<Node_a> NODES_A, Physical_network P) {
+
+vector<vector<double>> process_a(vector<Node_a> NODES_A, Physical_network P) {
+	vector<vector<double>> res;
+	res.resize(total_time, vector<double>(6, 0.0));
 	double E = 0.0, N = 0.0, I = 0.0, TE = 0.0, TN = 0.0, TI = 0.0;//frac and total
 	Gauss_Markov GM = Gauss_Markov();
 	//initial test only 3ºØdegree 50 20 10/10% 30% 60%
@@ -265,7 +271,7 @@ void process_a(vector<Node_a> NODES_A, Physical_network P) {
 		NODES_A[i].state[0] = 1.0 - 0.1, NODES_A[i].state[3] = 0.1;
 	}
 	cout << 0 << endl;
-	Printing(NODES_A);
+	Printing(NODES_A, res[0]);
 	int t = 1;
 	double area = max_x * max_y;
 	
@@ -303,7 +309,7 @@ void process_a(vector<Node_a> NODES_A, Physical_network P) {
 		}
 		//print fraction of state
 		cout << t << endl;
-		Printing(NODES_A);
+		Printing(NODES_A, res[t]);
 		t++;
 		cout << contact_rate * success_prob*NODES_A[0].Op_k*(E + I) << " ";
 		cout << (scan_rate*(NODES_A[0].Area_i / area * ((E + I)*number))) << " ";
@@ -311,4 +317,5 @@ void process_a(vector<Node_a> NODES_A, Physical_network P) {
 		cout << (1 - collision_cost * (I))*prob_NI << endl;
 	}
 	cout << NODES_A[0].Area_i << " " << NODES_A[0].Op_k << endl;
+	return res;
 }
