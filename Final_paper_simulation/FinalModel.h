@@ -38,7 +38,15 @@ double delta = 0.05;
 double ex_delta = 0.01;
 
 double new_node = 0.01;
-
+//contact_rate* success_prob* NODES_A[0].Op_k* (E + I) = exposed rate
+//(scan_rate * (NODES_A[0].Area_i / area * ((E + I) * number))) = iNsidious rate
+//NODES_A[0].Op_k * I * open_rate = infected_rate
+//(1 - collision_cost * (I)) * prob_NI = infected_rate_2
+// gamma = recovered_rate
+// lambda = lose_immunity_rate
+// delta = death_rate
+// ex_delta = ex_death_rate
+// new_node = new rate
 void computeArea_OpK(vector<Node_a>& NODES_A, Physical_network P, Node_a& i) {
 	double mean_v = 0.0;
 	for (int j = 0; j < i.v.size(); j++) {
