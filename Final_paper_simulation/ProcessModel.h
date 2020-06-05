@@ -32,7 +32,7 @@ bool guessTrue(double probability) {
 	}
 };
 
-double infected_fraction = 0.05; //5%
+double infected_fraction = 0.1; //10%
 void initial_infected(vector<Node>& NODES, int n) {
 	double tmp = n * infected_fraction;
 	int i = 0;
