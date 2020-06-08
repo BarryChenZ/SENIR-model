@@ -19,7 +19,7 @@ double iNsidious_rate = 0.8;
 double recovered_rate = 0.083; 
 double infected_sim_array[4] = { 0.2, 0.3, 0.4, 0.5 };
 double death_rate = 0.2;
-double new_rate = 0.01;// new rate = leave rate
+double new_rate = 0.02;// new rate = leave rate
 bool guessTrue(double probability) {
 	static default_random_engine e;
 	static uniform_real_distribution<double> u(0, 1);

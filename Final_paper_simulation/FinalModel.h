@@ -16,7 +16,7 @@ struct Node_a {//for analytical
 	double Area_i, Op_k;
 	vector<double> state;
 	vector<double> v;//velocity for node
-	double contact_rate = 0.5;//Rate_c
+	double contact_rate = 0.5;//Rate_c 
 	double success_prob = 0.5;//P_sucess
 	double open_rate = 0.8;//Rate_o
 	double scan_rate = 10000;//
@@ -291,10 +291,30 @@ void Printing(vector<Node_a> NODES_A, vector<double>& res1, vector<double>& reco
 		record[2] += ((NODES_A[j].num * NODES_A[j].Op_k * I * NODES_A[j].open_rate) / (double)number) * (1 / (double)total_time);
 		record[3] += ((NODES_A[j].num *  (1 - NODES_A[j].collision_cost * (I))*NODES_A[j].prob_NI) / (double)number) * (1 / (double)total_time);
 	}
-	cout << record[0] << " " << record[1] << " " << record[2] << " " << record[3] << endl;
+	//cout << record[0] << " " << record[1] << " " << record[2] << " " << record[3] << endl;
 }
 
-vector<vector<double>> process_a(vector<Node_a> NODES_A, Physical_network P, vector<Node>& NODES) {
+
+//Model threshold and stationary point
+bool Calculating_Threshold(Node_a i) {
+	double stationary_S, stationary_E, stationary_I, stationary_R, stationary_D, threshold;
+	//case 1: Non-constant value for E->I // test ok
+	//stationary_S = (i.new_node * (i.delta + i.lambda)) / (i.delta*(i.lambda + i.gamma + i.delta));
+	//double C1 = i.contact_rate*i.success_prob*i.Op_k + (i.scan_rate*(i.Area_i / (max_x*max_y) * number / (max_x*max_y)));
+	//double C3 = i.Op_k * i.open_rate + i.prob_NI;
+	//threshold = (C1 * stationary_S * (i.delta + i.ex_delta + i.gamma)) / (i.delta*i.ex_delta+2*i.delta*i.gamma+pow(i.delta,2)+pow(i.gamma,2));
+	//case 2: Constant value for E->I //test ok
+	stationary_S = (i.new_node * (i.delta + i.lambda))/(i.delta*(i.lambda+i.gamma+i.delta));
+	double C1 = i.contact_rate*i.success_prob*i.Op_k + (i.scan_rate*(i.Area_i / (max_x*max_y) * number / (max_x*max_y)));
+	double C3 = i.Op_k * i.open_rate + i.prob_NI;
+	threshold = (C1 * stationary_S * (C3 + i.delta + i.ex_delta + i.gamma))/((C3 +i.delta + i.gamma)*(i.delta + i.ex_delta + i.gamma));
+	cout << "stationary_S: " << stationary_S << endl;
+	cout << "Threshold: " << threshold << endl; // if > 1 I E large , else if i < 1 I E small.
+	if (threshold > 1) return true;
+	else return false;
+}
+
+vector<vector<double>> process_a(vector<Node_a>& NODES_A, Physical_network P, vector<Node>& NODES) {
 	vector<vector<double>> res;
 	res.resize(total_time, vector<double>(6, 0.0));
 	double E = 0.0, N = 0.0, I = 0.0, TE = 0.0, TN = 0.0, TI = 0.0;//frac and total
@@ -363,6 +383,6 @@ vector<vector<double>> process_a(vector<Node_a> NODES_A, Physical_network P, vec
 	}
 	//cout << NODES_A[0].Area_i << " " << NODES_A[0].Op_k << endl;
 	cout << record[0] << " " << record[1] << " " << record[2] << " " << record[3] << endl;
-	//setting(NODES, NODES_A[0], record);
+	setting(NODES, NODES_A[0], record);
 	return res;
 }
