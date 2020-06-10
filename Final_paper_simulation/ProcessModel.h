@@ -19,7 +19,7 @@ double iNsidious_rate = 0.8;
 double recovered_rate = 0.083; 
 double infected_sim_array[4] = { 0.2, 0.3, 0.4, 0.5 };
 double death_rate = 0.2;
-double new_rate = 0.02;// new rate = leave rate
+double new_rate = 0.03;// new rate = leave rate
 bool guessTrue(double probability) {
 	static default_random_engine e;
 	static uniform_real_distribution<double> u(0, 1);
@@ -56,6 +56,7 @@ void initial_infected(vector<Node>& NODES, int n) {
 
 //S -> E for long range SEIRD
 void exposedProcess(vector<Node>& NODES, vector<int>& temp, vector<vector<int>> adj_matrix, int n) { // S->E
+	double bias = 1.0;
 	for (int i = 0; i < n; i++) {
 		int node_state = NODES[i].get_state();
 		if (node_state == 0 && temp[i] == -1) {
@@ -73,8 +74,8 @@ void exposedProcess(vector<Node>& NODES, vector<int>& temp, vector<vector<int>> 
 					infected_neighbor_num_n++;
 			}
 			double infected_probability_n = 1 - pow(1 - NODES[i].iNsidious_rate, infected_neighbor_num_n);
-			//cout << infected_probability << endl;
-			if (guessTrue(infected_probability_e + infected_probability_n)) {
+			//cout << infected_probability_e + infected_probability_n << endl;
+			if (guessTrue((NODES[i].exposed_rate + NODES[i].iNsidious_rate)*bias)) {
 				temp[i] = 1;
 			}
 		}
@@ -100,10 +101,11 @@ void iNsidiousProcess(vector<Node>& NODES, vector<int>& temp, Physical_network& 
 
 //E->I and N->I
 void infectedProcess_1(vector<Node>& NODES, vector<int>& temp, int n) { // N->I
+	double bias = 1.0;
 	for (int i = 0; i < n; i++) {
 		int node_state = NODES[i].get_state();
-		if (node_state == 1 && temp[i] == -1) {
-			if (guessTrue(NODES[i].infected_rate + NODES[i].infected_rate_2)) temp[i] = 3;
+		if (node_state == 1 ) {
+			if (guessTrue(NODES[i].infected_rate*bias + NODES[i].infected_rate_2)) temp[i] = 3;
 		}
 	}
 };

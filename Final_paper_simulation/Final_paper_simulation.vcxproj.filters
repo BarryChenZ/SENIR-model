@@ -33,6 +33,9 @@
     <ClInclude Include="FinalModel.h">
       <Filter>標頭檔</Filter>
     </ClInclude>
+    <ClInclude Include="ExperimentRecord.h">
+      <Filter>標頭檔</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">

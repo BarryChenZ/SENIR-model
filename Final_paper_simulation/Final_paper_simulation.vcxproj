@@ -152,6 +152,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Distribution.h" />
+    <ClInclude Include="ExperimentRecord.h" />
     <ClInclude Include="FinalModel.h" />
     <ClInclude Include="Mobility.h" />
     <ClInclude Include="OtherE_Model.h" />
