@@ -56,7 +56,7 @@ void initial_infected(vector<Node>& NODES, int n) {
 
 //S -> E for long range SEIRD
 void exposedProcess(vector<Node>& NODES, vector<int>& temp, vector<vector<int>> adj_matrix, int n) { // S->E
-	double bias = 1.0;
+	
 	for (int i = 0; i < n; i++) {
 		int node_state = NODES[i].get_state();
 		if (node_state == 0 && temp[i] == -1) {
@@ -75,7 +75,7 @@ void exposedProcess(vector<Node>& NODES, vector<int>& temp, vector<vector<int>> 
 			}
 			double infected_probability_n = 1 - pow(1 - NODES[i].iNsidious_rate, infected_neighbor_num_n);
 			//cout << infected_probability_e + infected_probability_n << endl;
-			if (guessTrue((NODES[i].exposed_rate + NODES[i].iNsidious_rate)*bias)) {
+			if (guessTrue(NODES[i].exposed_rate + NODES[i].iNsidious_rate)) {
 				temp[i] = 1;
 			}
 		}
@@ -101,11 +101,10 @@ void iNsidiousProcess(vector<Node>& NODES, vector<int>& temp, Physical_network& 
 
 //E->I and N->I
 void infectedProcess_1(vector<Node>& NODES, vector<int>& temp, int n) { // N->I
-	double bias = 1.0;
 	for (int i = 0; i < n; i++) {
 		int node_state = NODES[i].get_state();
-		if (node_state == 1 ) {
-			if (guessTrue(NODES[i].infected_rate*bias + NODES[i].infected_rate_2)) temp[i] = 3;
+		if (node_state == 1) {
+			if (guessTrue(NODES[i].infected_rate + NODES[i].infected_rate_2)) temp[i] = 3;
 		}
 	}
 };
@@ -130,12 +129,12 @@ void recoveredProcess(vector<Node>& NODES, vector<int>& temp, int n) { // I->S
 void deathProcess(vector<Node>& NODES, vector<int>& temp, int n) {
 	for (int i = 0; i < n; i++) {
 		int node_state = NODES[i].get_state();
-		if (node_state == 0 || node_state == 3 || node_state == 4 && temp[i] == -1) {
+		if (node_state == 0 || node_state == 1 || node_state == 4 && temp[i] == -1) {
 			if (guessTrue(NODES[i].death_rate)) {
 				temp[i] = 5;
 			}
 		}
-		else if(node_state == 1 && node_state == 3 && temp[i] == -1){
+		else if(node_state == 3 && temp[i] == -1){
 			if (guessTrue(NODES[i].death_rate+ NODES[i].ex_death_rate)) temp[i] = 5;
 		}
 	}
@@ -166,7 +165,7 @@ void unchanged(vector<Node>& NODES, vector<int>& temp, int n) {
 }
 
 void update_state(vector<Node>& NODES, vector<int>& temp, int n) {
-#pragma omp parallel for
+//#pragma omp parallel for
 	for (int i = 0; i < n; i++) {
 		NODES[i].change_state(temp[i]);
 	}
@@ -239,9 +238,9 @@ int modified_sus_process(vector<Node>& NODES, vector<int>& temp, vector<vector<i
 	else return 0;
 	*/
 	
-	if (guess <= eff_expose + eff_iN) return 1;//case 2
-	else if (guess <= eff_expose + eff_iN + NODES[i].recovered_rate) return 4;
-	else if (guess <= eff_expose + eff_iN + NODES[i].recovered_rate + NODES[i].death_rate) return 5;
+	if (guess <= NODES[i].exposed_rate + NODES[i].iNsidious_rate) return 1;//case 2
+	else if (guess <= NODES[i].exposed_rate + NODES[i].iNsidious_rate + NODES[i].recovered_rate) return 4;
+	else if (guess <= NODES[i].exposed_rate + NODES[i].iNsidious_rate + NODES[i].recovered_rate + NODES[i].death_rate) return 5;
 	else return 0;
 	
 }
@@ -331,9 +330,9 @@ void Judgement(vector<int>& temp, vector<Node>& NODES, vector<vector<int>> adj_m
 		case 3:
 			temp[i] = modified_inf_process(NODES[i], guess);
 			break;
-		case 4:
-			temp[i] = modified_dea_process(NODES[i], guess);
-			break;
+		//case 4:
+			//temp[i] = modified_dea_process(NODES[i], guess);
+			//break;
 		case 5:
 			temp[i] = modified_rec_process(NODES[i], guess);
 			break;

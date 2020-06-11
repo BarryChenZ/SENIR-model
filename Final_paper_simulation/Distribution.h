@@ -28,10 +28,10 @@ private:
 	//transmission
 	vector<double> rate;//參數可以是rate也可以分開假設//暫定
 	double degree_P;
-	double degree_S;
 	//mobility
 	double x_pos, y_pos;
 public:
+	double degree_S;
 	vector<int> neighbor_set;
 	double infected_rate = 0.04;
 	double infected_rate_2 = 0.72;
@@ -128,7 +128,7 @@ private:
 public:
 	vector<vector<int>> adj_matrix;
 
-	Social_network(int num){
+	Social_network(int num, vector<Node>& NODES){
 		nodes = num;
 		//initial();
 
@@ -138,6 +138,9 @@ public:
 		for (int i = 100; i < 400; i++) degree[i] = 20;
 		for (int i = 400; i < 1000; i++) degree[i] = 10;
 		random_shuffle(degree.begin(), degree.end());
+		for (int i = 0; i < nodes; i++) {
+			NODES[i].degree_S = degree[i];
+		}
 		initial_fixedDegree(degree);
 	}
 	void initial() {
@@ -180,7 +183,7 @@ public:
 		adj_matrix.resize(nodes, vector<int>(nodes));
 		for (int i = 0; i < nodes; i++) {
 			for (int j = 0; j < nodes; j++) {
-				if (degree[i] > 0 && degree[j] > 0) {
+				if (degree[i] > 0 && degree[j] > 0 && i != j) {
 					degree[i]--, degree[j]--;
 					adj_matrix[i][j] = 1, adj_matrix[j][i] = 1;
 				}
