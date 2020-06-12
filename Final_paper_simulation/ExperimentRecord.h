@@ -53,3 +53,49 @@ void Exp2_Record(vector<vector<double>> res, int type1, int type2) {// ¼ÒÀÀ©Î¼Æ¾
 		//cout << endl;
 	}
 }
+
+void Exp3_Record(vector<vector<double>> res, int type1, int type2) {// ¼ÒÀÀ©Î¼Æ¾Ç/²Ä´X­Ó­È/²Ä´X­Ó¹êÅç
+	fstream file;
+	string s;
+	string e = ".csv";
+	string value1 = to_string(type2);
+	if (type1 == 1) {
+		s = "C:\\Users\\User\\Documents\\Github  liberary\\Matlab\\Result data\\exp3\\SimRes_exp3_";
+	}
+	else if (type1 == 2) {
+		s = "C:\\Users\\User\\Documents\\Github  liberary\\Matlab\\Result data\\exp3\\AnaRes_exp3_";
+	}
+	s = s + value1 + e;
+	file.open(s, ios::out);
+	for (int i = 0; i < res.size(); i++) {
+		for (int j = 0; j < res[0].size(); j++) {
+			file << res[i][j] << ",";
+			//cout << res[i][j] << " ";
+		}
+		file << endl;
+		//cout << endl;
+	}
+}
+
+void Exp4_Record(vector<vector<double>> res, int type1, int type2) {// ¼ÒÀÀ©Î¼Æ¾Ç/²Ä´X­Ó­È/²Ä´X­Ó¹êÅç
+	fstream file;
+	string s;
+	string e = ".csv";
+	string value1 = to_string(type2);
+	if (type1 == 1) {
+		s = "C:\\Users\\User\\Documents\\Github  liberary\\Matlab\\Result data\\exp4\\SimRes_exp4_";
+	}
+	else if (type1 == 2) {
+		s = "C:\\Users\\User\\Documents\\Github  liberary\\Matlab\\Result data\\exp4\\AnaRes_exp4_";
+	}
+	s = s + value1 + e;
+	file.open(s, ios::out);
+	for (int i = 0; i < res.size(); i++) {
+		for (int j = 0; j < res[0].size(); j++) {
+			file << res[i][j] << ",";
+			//cout << res[i][j] << " ";
+		}
+		file << endl;
+		//cout << endl;
+	}
+}

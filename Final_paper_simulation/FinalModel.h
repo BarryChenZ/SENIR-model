@@ -18,18 +18,20 @@ struct Node_a {//for analytical
 	vector<double> v;//velocity for node
 	//experiment 1 
 	double contact_rate_array[3] = {0.3, 0.6, 0.9};
-	double contact_rate = 9;//Rate_c 
-	double success_prob = 0.8;//P_sucess
-	double open_rate = 0.8;//Rate_o prob
+	double contact_rate = 5;//Rate_c 
+	double success_prob = 0.6;//P_sucess
+	double open_rate = 0.5;//Rate_o prob
 	double open_rate_array[3] = {0.1, 0.5, 1.0};
 	double scan_rate = 8;//1-100不會爆掉
 	double collision_cost = 0.2;
-	double prob_NI = 0.3;
+	double collision_cost_array[3] = {0.2, 0.5, 1.0};
+	double prob_NI = 0.5;
+	double prob_NI_array[3] = {0.3, 0.6, 0.9};
 	//wake_up_rate, Loss_imu_rate, Recover_rate
 	//death_rare, extra_death_rate
 	double omega = 0.3;
 	double omega_r = 0.2;
-	double gamma = 0.05;
+	double gamma = 0.01;
 	double lambda = 0.1;
 	double delta = 0.05;
 	double ex_delta = 0.01;
@@ -335,7 +337,7 @@ vector<vector<double>> process_a(vector<Node_a>& NODES_A, Physical_network P, ve
 	//initial test only 3種degree 50 20 10/10% 30% 60%
 	NODES_A.resize(3);
 
-	cout << NODES_A[0].open_rate_array[k - 1] << endl;//test 要修改1
+	cout << NODES_A[0].collision_cost_array[k - 1] << endl;//test 要修改1
 
 	vector<vector<double>> tmp(NODES_A.size(), vector<double>(6, 0.0));//SENIRD:012345
 	NODES_A[0].v.resize(number * 0.1), NODES_A[0].num = number * 0.1, NODES_A[0].degree = 50;
@@ -346,7 +348,7 @@ vector<vector<double>> process_a(vector<Node_a>& NODES_A, Physical_network P, ve
 	for (int i = 0; i < NODES_A.size(); i++) {
 		NODES_A[i].state.resize(6, 0.0);
 		NODES_A[i].state[0] = 1.0 - 0.1, NODES_A[i].state[3] = 0.1;
-		if (k != 0) NODES_A[i].open_rate = NODES_A[i].open_rate_array[k - 1]; //要修改2
+		if (k != 0) NODES_A[i].collision_cost = NODES_A[i].collision_cost_array[k - 1]; //要修改2
 
 		if (record.find(NODES_A[i].degree) == record.end()) {
 			record[NODES_A[i].degree] = {vector<vector<double>>(total_time, vector<double>(4, 0.0))};
