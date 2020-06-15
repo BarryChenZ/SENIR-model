@@ -99,3 +99,28 @@ void Exp4_Record(vector<vector<double>> res, int type1, int type2) {// º“¿¿©Œº∆æ
 		//cout << endl;
 	}
 }
+
+void Exp_Record(vector<vector<double>> res, int type1, int type2, int ExpNum) {// º“¿¿©Œº∆æ«/≤ƒ¥X≠”≠»/≤ƒ¥X≠”πÍ≈Á
+	fstream file;
+	string s;
+	string s1 = "C:\\Users\\User\\Documents\\Github  liberary\\Matlab\\Result data\\exp";
+	string s2 = to_string(ExpNum);
+	string s3, s4 = ".csv";
+	string s5 = to_string(type2);
+	if (type1 == 1) {
+		s3 = "\\SimRes_exp";
+	}
+	else if (type1 == 2) {
+		s3 = "\\AnaRes_exp";
+	}
+	s = s1 + s2 + s3 + s2 + "_" + s5 + s4;
+	file.open(s, ios::out);
+	for (int i = 0; i < res.size(); i++) {
+		for (int j = 0; j < res[0].size(); j++) {
+			file << res[i][j] << ",";
+			//cout << res[i][j] << " ";
+		}
+		file << endl;
+		//cout << endl;
+	}
+}

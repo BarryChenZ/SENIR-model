@@ -151,6 +151,7 @@ private:
 	double velocity;
 	double direction;
 	double chi_v = 0.5, mu_v = 10.0;//chi = alpha,mu = mean
+	double mu_v_array[3] = { 100.0, 100.0, 100.0 };
 	double chi_d = 0.5, mu_d = (1/3)* PI;//degree 60
 	double chi_s = 1;
 	double mu = 0.0, sigma = 5.0; // sigma¶V¤j¯B°Ê¶V¤j
@@ -161,6 +162,11 @@ public:
 	Gauss_Markov(int ID) {
 		number = ID;
 		velocity = mu_v;
+	}
+	Gauss_Markov(int ID, int k) {
+		number = ID;
+		velocity = mu_v_array[k-1];
+		mu_v = mu_v_array[k - 1];
 	}
 	Gauss_Markov() {}
 
@@ -176,6 +182,13 @@ public:
 	void initial_v(vector<double> v) {
 		for (int i = 0; i < v.size(); i++) {
 			v[i] = mu_v;
+		}
+		return;
+	}
+	void initial_v(vector<double> v, int k) {
+		for (int i = 0; i < v.size(); i++) {
+			v[i] = mu_v_array[k - 1];
+			mu_v = mu_v_array[k - 1];
 		}
 		return;
 	}

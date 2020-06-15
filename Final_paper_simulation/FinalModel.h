@@ -18,11 +18,11 @@ struct Node_a {//for analytical
 	vector<double> v;//velocity for node
 	//experiment 1 
 	double contact_rate_array[3] = {0.3, 0.6, 0.9};
-	double contact_rate = 5;//Rate_c 
+	double contact_rate = 3;//Rate_c 
 	double success_prob = 0.6;//P_sucess
 	double open_rate = 0.5;//Rate_o prob
 	double open_rate_array[3] = {0.1, 0.5, 1.0};
-	double scan_rate = 8;//1-100不會爆掉
+	double scan_rate = 5;//1-100不會爆掉
 	double collision_cost = 0.2;
 	double collision_cost_array[3] = {0.2, 0.5, 1.0};
 	double prob_NI = 0.5;
@@ -34,7 +34,9 @@ struct Node_a {//for analytical
 	double gamma = 0.01;
 	double lambda = 0.1;
 	double delta = 0.05;
+	double delta_array[3] = { 0.05, 0.04, 0.4 };
 	double ex_delta = 0.01;
+	double ex_delta_array[3] = { 0.01, 0.06, 0.1 };
 	double new_node = 0.03;
 };
 //parameters
@@ -56,7 +58,7 @@ double gamma = 0.1;
 double lambda = 0.1;
 double delta = 0.05;
 double ex_delta = 0.01;
-
+double ex_delta_array[3] = { 0.01, 0.05, 0.1};
 double new_node = 0.01;
 
 //contact_rate* success_prob* NODES_A[0].Op_k* (E + I) = exposed rate
@@ -92,6 +94,7 @@ void computeArea_OpK(vector<Node_a>& NODES_A, Physical_network P, Node_a& i) {
 	}
 	mean_v = mean_v / (double)i.num;
 	i.Area_i = PI * pow(P.get_range(), 2) + 2 * P.get_range()*mean_v * 1;//t = 1;
+	cout << i.Area_i << endl;
 	double total_link = 0.0;
 	for (int j = 0; j < NODES_A.size(); j++){
 		total_link += NODES_A[j].num * NODES_A[j].degree;
@@ -337,18 +340,21 @@ vector<vector<double>> process_a(vector<Node_a>& NODES_A, Physical_network P, ve
 	//initial test only 3種degree 50 20 10/10% 30% 60%
 	NODES_A.resize(3);
 
-	cout << NODES_A[0].collision_cost_array[k - 1] << endl;//test 要修改1
+	cout << NODES_A[0].delta_array[k - 1] << endl;//test 要修改1
 
 	vector<vector<double>> tmp(NODES_A.size(), vector<double>(6, 0.0));//SENIRD:012345
 	NODES_A[0].v.resize(number * 0.1), NODES_A[0].num = number * 0.1, NODES_A[0].degree = 50;
 	NODES_A[1].v.resize(number * 0.3), NODES_A[1].num = number * 0.3, NODES_A[1].degree = 20;
 	NODES_A[2].v.resize(number * 0.6), NODES_A[2].num = number * 0.6, NODES_A[2].degree = 10;
-	for(int i = 0; i < NODES_A.size(); i++) GM.initial_v(NODES_A[i].v);
+	for (int i = 0; i < NODES_A.size(); i++) GM.initial_v(NODES_A[i].v, k);//GM.initial_v(NODES_A[i].v);
 	//state initialize 10% infection at t = 0
 	for (int i = 0; i < NODES_A.size(); i++) {
 		NODES_A[i].state.resize(6, 0.0);
 		NODES_A[i].state[0] = 1.0 - 0.1, NODES_A[i].state[3] = 0.1;
-		if (k != 0) NODES_A[i].collision_cost = NODES_A[i].collision_cost_array[k - 1]; //要修改2
+		if (k != 0) {
+			NODES_A[i].delta = NODES_A[i].delta_array[k - 1]; //要修改2
+			NODES_A[i].ex_delta = NODES_A[i].ex_delta_array[k - 1];
+		}
 
 		if (record.find(NODES_A[i].degree) == record.end()) {
 			record[NODES_A[i].degree] = {vector<vector<double>>(total_time, vector<double>(4, 0.0))};
@@ -369,7 +375,7 @@ vector<vector<double>> process_a(vector<Node_a>& NODES_A, Physical_network P, ve
 				NODES_A[i].v[j] = GM.change_velocity(NODES_A[i].v[j]);
 			}
 		}
-
+		
 		//first calculating total fraction of ENI
 		for (int i = 0; i < NODES_A.size(); i++) {
 			E += (double)(NODES_A[i].state[1] * (double)NODES_A[i].num) / (double)number;

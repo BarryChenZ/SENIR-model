@@ -86,6 +86,7 @@ class Physical_network {
 private:
 	int nums; //可以有部分或者很多點
 	double range = 100.0;//10 average degree:1, 30 average degree: 5, 50 average degree: 8
+	double range_array[3] = {10, 100, 200};
 	double max_x = 1000, max_y = 1000;
 public:
 	//type 1 : based on range
@@ -115,6 +116,9 @@ public:
 	}
 	double get_range() {//for mathmatics model
 		return range;
+	}
+	void setting_range(int k) {
+		range = range_array[k - 1];
 	}
 	double area() {
 		return max_x * max_y;
