@@ -18,26 +18,26 @@ struct Node_a {//for analytical
 	vector<double> v;//velocity for node
 	//experiment 1 
 	double contact_rate_array[3] = {0.3, 0.6, 0.9};
-	double contact_rate = 3;//Rate_c 
+	double contact_rate = 5;//Rate_c 
 	double success_prob = 0.6;//P_sucess
 	double open_rate = 0.5;//Rate_o prob
 	double open_rate_array[3] = {0.1, 0.5, 1.0};
 	double scan_rate = 5;//1-100不會爆掉
 	double collision_cost = 0.2;
 	double collision_cost_array[3] = {0.2, 0.5, 1.0};
-	double prob_NI = 0.5;
+	double prob_NI = 0.6;
 	double prob_NI_array[3] = {0.3, 0.6, 0.9};
 	//wake_up_rate, Loss_imu_rate, Recover_rate
 	//death_rare, extra_death_rate
 	double omega = 0.3;
 	double omega_r = 0.2;
-	double gamma = 0.01;
-	double lambda = 0.1;
+	double gamma = 0.02;//0.01;
+	double lambda = 0.1;//0.1;
 	double delta = 0.05;
 	double delta_array[3] = { 0.05, 0.04, 0.4 };
 	double ex_delta = 0.01;
 	double ex_delta_array[3] = { 0.01, 0.06, 0.1 };
-	double new_node = 0.03;
+	double new_node = 0.01;
 };
 //parameters
 int number = 1000; // 4
@@ -320,8 +320,8 @@ bool Calculating_Threshold(Node_a i) {
 	//double C3 = i.Op_k * i.open_rate + i.prob_NI;
 	//threshold = (C1 * stationary_S * (i.delta + i.ex_delta + i.gamma)) / (i.delta*i.ex_delta+2*i.delta*i.gamma+pow(i.delta,2)+pow(i.gamma,2));
 	//case 2: Constant value for E->I //test ok
-	stationary_S = (i.new_node * (i.delta + i.lambda))/(i.delta*(i.lambda+i.gamma+i.delta));
-	double C1 = i.contact_rate*i.success_prob*i.Op_k + (i.scan_rate*(i.Area_i / (max_x*max_y) * number / (max_x*max_y)));
+	stationary_S = (i.new_node * (i.delta + i.lambda))/(i.delta*(i.lambda+i.gamma+i.delta));//算malware free的
+	double C1 = i.contact_rate*i.success_prob*i.Op_k + (i.scan_rate*(i.Area_i / (max_x*max_y)));
 	double C3 = i.Op_k * i.open_rate + i.prob_NI;
 	threshold = (C1 * stationary_S * (C3 + i.delta + i.ex_delta + i.gamma))/((C3 +i.delta + i.gamma)*(i.delta + i.ex_delta + i.gamma));
 	cout << "stationary_S: " << stationary_S << endl;
@@ -340,7 +340,7 @@ vector<vector<double>> process_a(vector<Node_a>& NODES_A, Physical_network P, ve
 	//initial test only 3種degree 50 20 10/10% 30% 60%
 	NODES_A.resize(3);
 
-	cout << NODES_A[0].delta_array[k - 1] << endl;//test 要修改1
+	//cout << NODES_A[0].delta_array[k - 1] << endl;//test 要修改1
 
 	vector<vector<double>> tmp(NODES_A.size(), vector<double>(6, 0.0));//SENIRD:012345
 	NODES_A[0].v.resize(number * 0.1), NODES_A[0].num = number * 0.1, NODES_A[0].degree = 50;
@@ -351,10 +351,10 @@ vector<vector<double>> process_a(vector<Node_a>& NODES_A, Physical_network P, ve
 	for (int i = 0; i < NODES_A.size(); i++) {
 		NODES_A[i].state.resize(6, 0.0);
 		NODES_A[i].state[0] = 1.0 - 0.1, NODES_A[i].state[3] = 0.1;
-		if (k != 0) {
-			NODES_A[i].delta = NODES_A[i].delta_array[k - 1]; //要修改2
-			NODES_A[i].ex_delta = NODES_A[i].ex_delta_array[k - 1];
-		}
+		//if (k != 0) {
+			//NODES_A[i].delta = NODES_A[i].delta_array[k - 1]; //要修改2
+			//NODES_A[i].ex_delta = NODES_A[i].ex_delta_array[k - 1];
+		//}
 
 		if (record.find(NODES_A[i].degree) == record.end()) {
 			record[NODES_A[i].degree] = {vector<vector<double>>(total_time, vector<double>(4, 0.0))};

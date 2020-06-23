@@ -44,7 +44,7 @@ public:
 	double wake_up_rate = 0.3;
 	double wake_up_rate_r = 0.2;
 	double lose_immunity_rate = 0.1;
-	double new_rate = 0.02;// new rate = leave rate
+	double new_rate = 0.01;// new rate = leave rate
 
 	Node(int ID) {
 		number = ID;
