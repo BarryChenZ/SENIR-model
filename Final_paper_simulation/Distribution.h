@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <vector>
+#include <map>
 #include <math.h>
 //#include "Mobility.h"
 using namespace std;
@@ -44,7 +45,7 @@ public:
 	double wake_up_rate = 0.3;
 	double wake_up_rate_r = 0.2;
 	double lose_immunity_rate = 0.1;
-	double new_rate = 0.01;// new rate = leave rate
+	double new_rate = 0.04;// new rate = leave rate
 
 	Node(int ID) {
 		number = ID;
@@ -131,21 +132,24 @@ private:
 	double average_degree;
 public:
 	vector<vector<int>> adj_matrix;
-
+	map<int, int> degree_count;//統計不同degree的點數
+	vector<int> degree_individual;
 	Social_network(int num, vector<Node>& NODES){
 		nodes = num;
 		//initial();
 
 		//fixed degree
+		
 		vector<int> degree(num, 0);
-		for (int i = 0; i < 100; i++) degree[i] = 50;
-		for (int i = 100; i < 400; i++) degree[i] = 20;
-		for (int i = 400; i < 1000; i++) degree[i] = 10;
+		for (int i = 0; i < nodes*0.1; i++) degree[i] = 50;
+		for (int i = nodes * 0.1; i < nodes*0.4; i++) degree[i] = 20;
+		for (int i = nodes * 0.4; i < nodes; i++) degree[i] = 10;
 		random_shuffle(degree.begin(), degree.end());
 		for (int i = 0; i < nodes; i++) {
 			NODES[i].degree_S = degree[i];
 		}
 		initial_fixedDegree(degree);
+		
 	}
 	void initial() {
 		//srand((unsigned)time(NULL));
@@ -162,14 +166,16 @@ public:
 			degree[i] = start-1;//不包含自己
 			total_link += start-1;
 		}
-		//cout << total_link << endl;
+		cout << total_link << endl;
 		
 		//分配link by BA model(Scare-free)
+		start++;
 		while (start < nodes) {
 			double tmp = 0.0;
-			for (int i = 0; i < start; i++) {
+			for (int i = 0; i < start-1; i++) {
 				//cout << degree[i] << endl;
 				double prob = degree[i]/total_link;
+				//cout << prob << endl;;
 				if (isValid(prob)) {
 					adj_matrix[start][i] = 1, adj_matrix[i][start] = 1;
 					degree[i]++;
@@ -180,7 +186,12 @@ public:
 			total_link += degree[start] * 2;
 			start++;
 		}
-		//cout << total_link << endl;
+		cout << total_link << endl;
+
+		for (int i = 0; i < nodes; i++) {
+			int temp = get_degree(i);
+			degree_count[temp]++;
+		}
 		return;
 	}
 	void initial_fixedDegree(vector<int> degree) {

@@ -150,7 +150,7 @@ private:
 	int number;
 	double velocity;
 	double direction;
-	double chi_v = 0.5, mu_v = 10.0;//chi = alpha,mu = mean
+	double chi_v = 0.5, mu_v = 100.0;//chi = alpha,mu = mean
 	double mu_v_array[3] = { 100.0, 100.0, 100.0 };
 	double chi_d = 0.5, mu_d = (1/3)* PI;//degree 60
 	double chi_s = 1;

@@ -25,7 +25,7 @@ struct Node_a {//for analytical
 	double scan_rate = 5;//1-100不會爆掉
 	double collision_cost = 0.2;
 	double collision_cost_array[3] = {0.2, 0.5, 1.0};
-	double prob_NI = 0.6;
+	double prob_NI = 0.5;
 	double prob_NI_array[3] = {0.3, 0.6, 0.9};
 	//wake_up_rate, Loss_imu_rate, Recover_rate
 	//death_rare, extra_death_rate
@@ -37,10 +37,11 @@ struct Node_a {//for analytical
 	double delta_array[3] = { 0.05, 0.04, 0.4 };
 	double ex_delta = 0.01;
 	double ex_delta_array[3] = { 0.01, 0.06, 0.1 };
-	double new_node = 0.01;
+	double new_node = 0.04;
 };
 //parameters
 int number = 1000; // 4
+int number_array[3] = { 1000,10000,50000 };
 int total_time = 50;
 double max_x = 1000, max_y = 1000;
 
@@ -330,31 +331,47 @@ bool Calculating_Threshold(Node_a i) {
 	else return false;
 }
 
-vector<vector<double>> process_a(vector<Node_a>& NODES_A, Physical_network P, vector<Node>& NODES, int k, unordered_map<int, vector<vector<double>>>& record) {
+vector<vector<double>> process_a(vector<Node_a>& NODES_A, Social_network S, Physical_network P, vector<Node>& NODES, int k, unordered_map<int, vector<vector<double>>>& record) {
+	//number = number_array[k - 1];
 	vector<vector<double>> res;
 	res.resize(total_time, vector<double>(6, 0.0));
 	double E = 0.0, N = 0.0, I = 0.0, TE = 0.0, TN = 0.0, TI = 0.0;//frac and total
 	
 	//record.resize(total_time, vector<double>(4,0.0)); // record 4 value, prapare to transmit to the simulation parameters.
 	Gauss_Markov GM = Gauss_Markov();
-	//initial test only 3種degree 50 20 10/10% 30% 60%
+	//initial test only 3種degree 50 20 10/10% 30% 60% 舊的
+	
 	NODES_A.resize(3);
-
-	//cout << NODES_A[0].delta_array[k - 1] << endl;//test 要修改1
+	//cout << NODES_A[0].contact_rate_array[k - 1] << endl;//test 要修改1
 
 	vector<vector<double>> tmp(NODES_A.size(), vector<double>(6, 0.0));//SENIRD:012345
 	NODES_A[0].v.resize(number * 0.1), NODES_A[0].num = number * 0.1, NODES_A[0].degree = 50;
 	NODES_A[1].v.resize(number * 0.3), NODES_A[1].num = number * 0.3, NODES_A[1].degree = 20;
 	NODES_A[2].v.resize(number * 0.6), NODES_A[2].num = number * 0.6, NODES_A[2].degree = 10;
-	for (int i = 0; i < NODES_A.size(); i++) GM.initial_v(NODES_A[i].v, k);//GM.initial_v(NODES_A[i].v);
+	
+	//新的BA model模式 會有部分Degree只有一個點
+	/*
+	NODES_A.resize(S.degree_count.size());
+	cout << NODES_A[0].contact_rate_array[k - 1] << endl;//test 要修改1
+	vector<vector<double>> tmp(NODES_A.size(), vector<double>(6, 0.0));//SENIRD:012345
+	map<int, int>::iterator it = S.degree_count.begin();
+	for (int i = 0; i < S.degree_count.size(); i++, it++) {
+		NODES_A[i].v.resize(it->second), NODES_A[i].num = it->second, NODES_A[i].degree = it->first;
+		cout << NODES_A[i].degree << " " << NODES_A[i].num << endl;
+	}
+	*/
+
+	//GM.initial_v(NODES_A[i].v);
+	//GM.initial_v(NODES_A[i].v, k);
+	for (int i = 0; i < NODES_A.size(); i++) GM.initial_v(NODES_A[i].v, k);//改速度的實驗
 	//state initialize 10% infection at t = 0
 	for (int i = 0; i < NODES_A.size(); i++) {
 		NODES_A[i].state.resize(6, 0.0);
 		NODES_A[i].state[0] = 1.0 - 0.1, NODES_A[i].state[3] = 0.1;
-		//if (k != 0) {
-			//NODES_A[i].delta = NODES_A[i].delta_array[k - 1]; //要修改2
+		if (k != 0) {
+			//NODES_A[i].contact_rate = NODES_A[i].contact_rate_array[k - 1]; //要修改2
 			//NODES_A[i].ex_delta = NODES_A[i].ex_delta_array[k - 1];
-		//}
+		}
 
 		if (record.find(NODES_A[i].degree) == record.end()) {
 			record[NODES_A[i].degree] = {vector<vector<double>>(total_time, vector<double>(4, 0.0))};
