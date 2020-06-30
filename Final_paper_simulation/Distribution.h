@@ -45,7 +45,7 @@ public:
 	double wake_up_rate = 0.3;
 	double wake_up_rate_r = 0.2;
 	double lose_immunity_rate = 0.1;
-	double new_rate = 0.04;// new rate = leave rate
+	double new_rate = 0.01;// new rate = leave rate
 
 	Node(int ID) {
 		number = ID;
@@ -97,6 +97,7 @@ public:
 		for (int i = 0; i < nums; i++) {
 			double tmp1  = Uniform_distri(0.0, max_x);
 			double tmp2  = Uniform_distri(0.0, max_y);
+			
 			NODES[i].set_position(tmp1, tmp2);
 		}
 		for (int i = 0; i < nums; i++) {
@@ -148,7 +149,7 @@ public:
 		for (int i = 0; i < nodes; i++) {
 			NODES[i].degree_S = degree[i];
 		}
-		initial_fixedDegree(degree);
+		//initial_fixedDegree(degree);
 		
 	}
 	void initial() {

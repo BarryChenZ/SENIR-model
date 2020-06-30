@@ -25,7 +25,7 @@ struct Node_a {//for analytical
 	double scan_rate = 5;//1-100¤£·|Ãz±¼
 	double collision_cost = 0.2;
 	double collision_cost_array[3] = {0.2, 0.5, 1.0};
-	double prob_NI = 0.5;
+	double prob_NI = 0.6;
 	double prob_NI_array[3] = {0.3, 0.6, 0.9};
 	//wake_up_rate, Loss_imu_rate, Recover_rate
 	//death_rare, extra_death_rate
@@ -37,20 +37,24 @@ struct Node_a {//for analytical
 	double delta_array[3] = { 0.05, 0.04, 0.4 };
 	double ex_delta = 0.01;
 	double ex_delta_array[3] = { 0.01, 0.06, 0.1 };
-	double new_node = 0.04;
+	double new_node = 0.01;
 };
+//cout << NODES_A[0].contact_rate * NODES_A[0].success_prob*NODES_A[0].Op_k*(E + I) << " ";
+//cout << (NODES_A[0].scan_rate*(NODES_A[0].Area_i * ((E + I) / area))) << " ";
+//cout << NODES_A[0].Op_k*I*NODES_A[0].open_rate << " ";
+//cout << (1 - NODES_A[0].collision_cost * (I))*NODES_A[0].prob_NI << endl;
 //parameters
 int number = 1000; // 4
-int number_array[3] = { 1000,10000,50000 };
+int number_array[3] = { 3000,5000,10000 };
 int total_time = 50;
 double max_x = 1000, max_y = 1000;
 
 double contact_rate = 5;//Rate_c
-double success_prob = 0.5;//P_sucess
-double open_rate = 0.8;//Rate_o
+double success_prob = 0.05;//P_sucess
+double open_rate = 0.08;//Rate_o
 double scan_rate = 5;//
-double collision_cost = 0.2;
-double prob_NI = 0.8;
+double collision_cost = 0.02;
+double prob_NI = 0.08;
 //wake_up_rate, Loss_imu_rate, Recover_rate
 //death_rare, extra_death_rate
 double omega = 0.3;
@@ -95,7 +99,7 @@ void computeArea_OpK(vector<Node_a>& NODES_A, Physical_network P, Node_a& i) {
 	}
 	mean_v = mean_v / (double)i.num;
 	i.Area_i = PI * pow(P.get_range(), 2) + 2 * P.get_range()*mean_v * 1;//t = 1;
-	cout << i.Area_i << endl;
+	//cout << i.Area_i << endl;
 	double total_link = 0.0;
 	for (int j = 0; j < NODES_A.size(); j++){
 		total_link += NODES_A[j].num * NODES_A[j].degree;

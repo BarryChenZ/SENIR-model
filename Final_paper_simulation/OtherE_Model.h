@@ -1,11 +1,14 @@
 #pragma once
 //3 types epidemic model from other papers
 
+//OLD
 //1. A Two layer Model of Malware Propagation in a Search Engine Context
 //2. Modelling the Spread of Botnet Malware in IoT-Based Wireless Sensor NetworksModelling the Spre
 //3. Optimal Impulse Control of Bi-Virus SIR Epidemics with Application to Heterogeneous Internet of Things
 //4. SNIRD  Disclosing Rules of Malware Spread in Heter wireless Sensor networks
 //5. A cloud-assisted malware detection and suppression framework for wireless multimedia system in IoT based on dynamic differential game
+
+//NEW
 
 #include <iostream>
 #include <vector>
@@ -14,7 +17,8 @@
 #include <fstream>
 
 using namespace std;
-//1
+//1 old
+/*
 class Community {
 private:
 	double alpha = 0.1; //search engine prob.
@@ -93,7 +97,7 @@ void SI_model_with_search_engine() {
 	}
 	return;
 }
-
+*/
 //2
 double S_node_2 = 0.998, I_node_2 = 0.002, node_2 = 500; //S =  random scanning full network
 double alpha_2 = 0.25;
@@ -349,3 +353,63 @@ void SEIQRD_model() {
 		++t;
 	}
 }
+
+
+//NEW comparing papers
+//Idea: Comparing only long, only short, hybrid
+/*
+Direct:
+1.Web malware spread modelling and optimal control strategies %liu2017web
+2.Virus Propagation and Patch Distribution in Multiplex Networks: Modeling, Analysis, and Optimal Allocation
+*/
+
+
+class liu2017web{//SDIR (susceptible,delitescent,infected,recovered)
+private:
+	int n, RunT;
+	double infected_start = 0.1;
+	//parameters
+	double lambda = 0.00005, mu = 0.5, epsilon = 0.2, gamma = 0.2, d = 0.01, b = 100, zeta = 0.1;//論文數據
+public:
+	liu2017web(int num, int time) {
+		n = num, RunT = time;
+	}
+	vector<vector<double>> Process() {
+		vector<vector<double>> res(RunT, vector<double>(4, 0.0));
+		res.resize(RunT, vector<double>(4, 0.0));
+		vector<double> state(4, 0.0);
+		//initial
+		state[0] = 1000, state[1] = 1000, state[2] = 3000, state[3] = 2000;
+		cout << 0 << ": ";
+		Printing(state, res[0]);
+		int t = 1;
+		while (t < RunT) {
+			vector<double> tmp(4,0.0);
+			Computing(tmp, state);
+			Update(tmp, state);
+			cout << t << ": ";
+			Printing(state, res[t]);
+			++t;
+		}
+		return res;
+	}
+	//0S 1D 2I 3R
+	void Computing(vector<double>& tmp, vector<double> state) {
+		tmp[0] = b - lambda*state[0]*state[2]+zeta*state[3]-d*state[0];
+		tmp[1] = lambda * state[0] * state[2]-mu*state[1]-epsilon*state[1]-d*state[1];
+		tmp[2] = epsilon * state[1] -gamma*state[2]-d*state[2];
+		tmp[3] = mu * state[1]+ gamma * state[2]- zeta * state[3]-d*state[3];
+	}
+	void Update(vector<double> tmp, vector<double>& state) {
+		for (int i = 0; i < state.size(); i++) {
+			state[i] = (state[i] + tmp[i] < 0) ? (double)0.0 : state[i] + tmp[i];
+		}
+	}
+	void Printing(vector<double> state, vector<double>& res) {
+		for (int i = 0; i < state.size(); i++) {
+			res[i] = state[i];
+			cout << res[i] << " ";
+		}
+		cout << endl;
+	}
+};
