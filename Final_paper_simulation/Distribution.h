@@ -149,7 +149,7 @@ public:
 		for (int i = 0; i < nodes; i++) {
 			NODES[i].degree_S = degree[i];
 		}
-		//initial_fixedDegree(degree);
+		initial_fixedDegree(degree);
 		
 	}
 	void initial() {
@@ -198,7 +198,7 @@ public:
 	void initial_fixedDegree(vector<int> degree) {
 		adj_matrix.resize(nodes, vector<int>(nodes));
 		for (int i = 0; i < nodes; i++) {
-			for (int j = 0; j < nodes; j++) {
+			for (int j = i + 1; j < nodes; j++) {
 				if (degree[i] > 0 && degree[j] > 0 && i != j) {
 					degree[i]--, degree[j]--;
 					adj_matrix[i][j] = 1, adj_matrix[j][i] = 1;

@@ -15,6 +15,7 @@
 #include <math.h>
 #include <time.h>
 #include <fstream>
+#include "Distribution.h"
 
 using namespace std;
 //1 old
@@ -359,10 +360,18 @@ void SEIQRD_model() {
 //Idea: Comparing only long, only short, hybrid
 /*
 Direct:
-1.Web malware spread modelling and optimal control strategies %liu2017web
+1.Web malware spread modelling and optimal control strategies %liu2017web test ok
 2.Virus Propagation and Patch Distribution in Multiplex Networks: Modeling, Analysis, and Optimal Allocation
 */
-
+/*
+Short:
+3.SNIRD Disclosing Rules of Malware Spread in Heterogeneous Wireless Sensor Networks(without mobility)
+4.An Epidemiology-Based Model for Disclosing Dynamics of Malware Propagation in Heterogeneous and Mobile WSNs(with mobility)
+*/
+/*
+Hybrid:
+5.Modelling the Spread of Botnet Malware in IoT-Based Wireless Sensor Networks(without mobility)
+*/
 
 class liu2017web{//SDIR (susceptible,delitescent,infected,recovered)
 private:
@@ -379,7 +388,7 @@ public:
 		res.resize(RunT, vector<double>(4, 0.0));
 		vector<double> state(4, 0.0);
 		//initial
-		state[0] = 1000, state[1] = 1000, state[2] = 3000, state[3] = 2000;
+		state[0] = n - infected_start * n, state[1] = 0, state[2] = infected_start * n, state[3] = 0;
 		cout << 0 << ": ";
 		Printing(state, res[0]);
 		int t = 1;
@@ -407,9 +416,280 @@ public:
 	}
 	void Printing(vector<double> state, vector<double>& res) {
 		for (int i = 0; i < state.size(); i++) {
+			res[i] = state[i]/(double)n;
+			cout << res[i] << " ";
+		}
+		cout << endl;
+	}
+};
+
+class zhao2019virus {//Markov chain 建好尚未測試
+private:
+	int n, RunT;
+	double infected_start = 0.1;
+	vector<vector<double>> prob_matrix;//store probility
+	double m = 0.03, beta_v = 0.3, beta_p = 0.3 , delta_v = 0.2, delta_p = 0.4;
+public:
+	zhao2019virus(int num, int time) {
+		n = num, RunT = time;
+	}
+	vector<vector<double>> Process(Social_network S) {//need adj network
+		vector<vector<double>> res(RunT, vector<double>(4, 0.0));
+		prob_matrix.resize(n, vector<double>(4, 0.0));
+		vector<double> state(n, 0.0);
+		//initial 初始化感染點
+		for (int i = 0; i < prob_matrix.size(); i++) {
+			prob_matrix[i][0] = 1.0;
+		}
+		for (int i = 0; i < n*infected_start; i++) {
+			prob_matrix[i][0] = 0.0;
+			prob_matrix[i][1] = 1.0;
+			state[i] = 1.0;
+		}
+
+		cout << 0 << ": ";
+		Printing(state, res[0]);
+		int t = 1;
+		while (t < RunT) {
+			vector<double> tmp(n, 0.0);
+			//因為是markov chain 每個點要各自判斷
+			ComputingProb(prob_matrix, S);//compute t + 1, 0 -> 1, 1 -> 2
+			Determine_state(state, prob_matrix);
+			cout << t << ": ";
+			Printing(state, res[t]);
+			++t;
+		}
+		return res;
+	}
+	void ComputingProb(vector<vector<double>>& prob_matrix, Social_network S) {
+		vector<vector<double>> tmp(n, vector<double>(4, 0.0));
+		for (int i = 0; i < prob_matrix.size(); i++) {
+			double q_i = 1.0, r_i = 1.0;
+			for (int j = 0; j < n; j++) {
+				if (S.adj_matrix[i][j] == 1 && i != j) {
+					q_i *= 1.0 - prob_matrix[j][1] * beta_v;
+					r_i *= 1.0 - prob_matrix[j][2] * beta_p;
+				}
+			}
+			tmp[i][0] = prob_matrix[i][0] * (1 - m)*r_i*q_i + prob_matrix[i][1] * (1 - m)*r_i*delta_v;
+			tmp[i][1] = prob_matrix[i][0] * (1 - m)*r_i*(1 - q_i) + prob_matrix[i][1] * (1 - m)*r_i*(1 - delta_v);
+			tmp[i][2] = prob_matrix[i][0]*(1-((1 - m)*r_i))+ prob_matrix[i][1]*(1-((1 - m)*r_i))+ prob_matrix[i][2]*(1-delta_v);
+			tmp[i][3] = prob_matrix[i][3] + prob_matrix[i][2] * delta_p;
+		}
+		//Updating
+		for (int i = 0; i < prob_matrix.size(); i++) {
+			prob_matrix[i][0] = tmp[i][0];
+			prob_matrix[i][1] = tmp[i][1];
+			prob_matrix[i][2] = tmp[i][2];
+			prob_matrix[i][3] = tmp[i][3];
+		}
+	}
+	// 0 US 1 UI 2 PV 3 DV
+	void Determine_state(vector<double> & state, vector<vector<double>> prob_matrix) {
+		for (int i = 0; i < n; i++) {
+			double r = (double)rand() / (RAND_MAX);
+			if (r <= prob_matrix[i][0]) state[i] = 0;
+			r -= prob_matrix[i][0];
+			if (r <= prob_matrix[i][1]) state[i] = 1;
+			r -= prob_matrix[i][0];
+			if (r <= prob_matrix[i][2]) state[i] = 2;
+			r -= prob_matrix[i][0];
+			if (r <= prob_matrix[i][3]) state[i] = 3;
+		}
+	}
+	void Update(vector<double> tmp, vector<double>& state) {//Markov 
+		for (int i = 0; i < state.size(); i++) {
+			state[i] = tmp[i];
+		}
+	}
+	void Printing(vector<double> state, vector<double>& res) {
+		vector<double> temp(4,0.0);
+		for (int i = 0; i < state.size(); i++) {
+			temp[state[i]] += 1 / (double)n;
+		}
+		for (int i = 0; i < temp.size(); i++) {
+			cout << temp[i] << " ";
+		}
+		cout << endl;
+		res = temp;
+	}
+};
+
+class shen2019snird {// 修改上面的 建好
+private:
+	int n, RunT;
+	double q_RS = 0.25, q_RD = 0.0125;
+	double q_SN = 0.4, q_SR = 0.15, q_SD = 0.0125;
+	double q_NR = 0.1, q_NI = 0.2, q_ND = 0.0125;
+	double q_IR = 0.1, q_ID = 0.05;
+	double omega_k, mu = 0.01;
+	double alpha_k = 0.333;//delta_k = k, C, function, k = 20 結果比較準,如果k都相同
+	//degree 設50 20 10
+	double infected_start = 0.1;
+public:
+	shen2019snird(int num, int time) {
+		n = num, RunT = time;
+	}
+	vector<vector<double>> Process() {
+		vector<vector<double>> res(RunT, vector<double>(5, 0.0));
+		vector<double> state(5, 0.0);
+		//initial
+		state[0] = 1 - infected_start , state[1] = 0, state[2] = infected_start, state[3] = 0, state[4] = 0;
+		cout << 0 << ": ";
+		Printing(state, res[0]);
+		int t = 1;
+		while (t < RunT) {
+			vector<double> tmp(5, 0.0);
+			omega_function(state);
+
+			Computing(tmp, state);
+			Update(tmp, state);
+			cout << t << ": ";
+			Printing(state, res[t]);
+			++t;
+		}
+		return res;
+	}
+	//0S 1N 2I 3R 4D
+	void Computing(vector<double>& tmp, vector<double> state) {
+		tmp[0] = q_RS * state[3] - q_SN * omega_4*state[0] - q_SR * state[0] - q_SD * state[0];
+		tmp[1] = q_SN * omega_4*state[0] - q_NI * state[1] - q_ND * state[1];
+		tmp[2] = q_NI * state[1] - q_IR * state[2] - q_ID * state[2];
+		tmp[3] = mu + q_SR * state[0] + q_NR * state[1] + q_IR * state[2] - q_RS * state[3] - q_RD * state[3];
+		tmp[4] = q_SD * state[0] + q_ND * state[1] + q_ID * state[2] + q_RD * state[3] - mu;
+	}
+	void Update(vector<double> tmp, vector<double>& state) {
+		for (int i = 0; i < state.size(); i++) {
+			state[i] = (state[i] + tmp[i] < 0) ? (double)0.0 : state[i] + tmp[i];
+		}
+	}
+	void Printing(vector<double> state, vector<double>& res) {
+		for (int i = 0; i < state.size(); i++) {
 			res[i] = state[i];
 			cout << res[i] << " ";
 		}
 		cout << endl;
 	}
+	void omega_function(vector<double> state) {
+		double m = 50 * alpha_k + 20 * alpha_k + 10 * alpha_k;
+		double tmp = 0.0;
+		omega_k = (1 / m)*(alpha_k*delta_k(50)*state[2] + alpha_k * delta_k(20)*state[2] + alpha_k * delta_k(10)*state[2]);
+		return;
+	}
+	double delta_k(int k) {
+		double delta_k = (5 * (double)pow(k, 0.5)) / (1 + 1 * (double)pow(k, 0.5));
+		return delta_k;
+	}
+};
+
+class shen2020epidemiology {//VCQPS
+private:
+	int n, RunT;
+	double infected_start = 0.1;
+
+	double alpha;
+	double phi_QV, phi_QP, phi_QS;
+	double phi_PV, phi_PS;
+	double phi_VC, phi_VP, phi_VS;
+	double phi_CQ, phi_CP, phi_CS;
+	double varphi, varsigma, R, v_mean, chi_n;
+public:
+	shen2020epidemiology(int num, int time) {
+		n = num, RunT = time;
+	}
+	//0V 1C 2Q 3P 4S
+	vector<vector<double>> Process() {
+		vector<vector<double>> res(RunT, vector<double>(5, 0.0));
+		vector<double> state(5, 0.0);
+		//initial
+		state[0] = 1 - infected_start, state[1] = infected_start;
+		cout << 0 << ": ";
+		Printing(state, res[0]);
+		int t = 1;
+		while (t < RunT) {
+			vector<double> tmp(5, 0.0);
+			//還要計算
+
+			Computing(tmp, state);
+			Update(tmp, state);
+			cout << t << ": ";
+			Printing(state, res[t]);
+			++t;
+		}
+		return res;
+	}
+	//0V 1C 2Q 3P 4S
+	void Computing(vector<double>& tmp, vector<double> state) {
+		tmp[0] = phi_QV*state[2]+phi_PV*state[3]-phi_VC*varsigma*varphi*state[0]*chi_n-phi_VP*state[0]-phi_VS*state[0];
+		tmp[1] = phi_VC * varsigma*varphi*state[0] - phi_CQ * state[1] - phi_CP * state[1] - phi_CS * state[1];
+		tmp[2] = phi_CQ * state[1] - phi_QV * state[2] - phi_QP * state[2] - phi_QS * state[2];
+		tmp[3] = alpha + phi_VP * state[0] + phi_CP * state[1] + phi_QP * state[2] - phi_PS * state[3];
+		tmp[4] = phi_VS * state[0] + phi_CS * state[1] + phi_QS * state[2] + phi_PS * state[3] - alpha;
+	}
+	void Update(vector<double> tmp, vector<double>& state) {
+		for (int i = 0; i < state.size(); i++) {
+			state[i] = (state[i] + tmp[i] < 0) ? (double)0.0 : state[i] + tmp[i];
+		}
+	}
+	void Printing(vector<double> state, vector<double>& res) {
+		for (int i = 0; i < state.size(); i++) {
+			res[i] = state[i];
+			cout << res[i] << " ";
+		}
+		cout << endl;
+	}
+};
+class acarali2019modelling {//SIIIS 問題1:S感覺都一樣 建好
+private:
+	int n, RunT, WSN = 5;
+	double alpha = 0.25;
+	double I_r_2 = 0.002, I_loc_2 = 0, I_nhb_2 = 0;
+	double beta_random = 0.3 , beta_local = 0.4 , beta_p2p = 0.6;
+	double dth_random  = 0.01, dth_local = 0.018, dth_p2p = 0.01, dth = 0.01;
+	double infected_start = 0.1;
+public:
+	acarali2019modelling(int num, int time) {
+		n = num, RunT = time;
+	}
+	vector<vector<double>> Process() {
+		vector<vector<double>> res(RunT, vector<double>(2, 0.0));//0 S 1 I
+		vector<double> state(4, 0.0);//比例
+		//0S 1I_random 2I_local 3I_p2p
+		//一開始透過random擴散
+		state[0] = 1 - infected_start, state[1] = infected_start;
+		
+		cout << 0 << ": ";
+		Printing(state, res[0]);
+		int t = 1;
+		while (t < RunT) {
+			double I = 0.0;
+			I = state[1] + state[2] + state[3];
+			vector<double> tmp(4, 0.0);
+			Computing(tmp, state, I);
+			Update(tmp, state);
+			cout << t << ": ";
+			Printing(state, res[t]);
+			++t;
+		}
+		return res;
+	}
+	void Computing(vector<double>& tmp, vector<double> state,double I) {// S = S_loc = S_nhb
+		tmp[0] = -beta_random * state[0] * I - beta_local * state[0] * I - beta_p2p * state[0] * I - dth * state[0] + alpha * I;
+		tmp[1] = beta_random * state[0] * I - alpha * state[1] - dth * state[1] - dth_random * state[1];
+		tmp[2] = beta_local * state[0] * I - alpha * state[2] - dth * state[2] - dth_local * state[2];
+		tmp[3] = beta_p2p * state[0] * I - alpha * state[3] - dth * state[3] - dth_p2p * state[3];
+	}
+	void Update(vector<double> tmp, vector<double>& state) {
+		for (int i = 0; i < state.size(); i++) {
+			state[i] = (state[i] + tmp[i] < 0) ? (double)0.0 : state[i] + tmp[i];
+		}
+	}
+	void Printing(vector<double> state, vector<double>& res) {
+		res[0] = state[0];
+		res[1] = (state[1] + state[2] + state[3]);
+		
+		for(int i = 0; i < res.size(); i++) cout << res[i] << " ";//S I
+		cout << endl;
+	}
+
 };
