@@ -37,7 +37,7 @@ struct Node_a {//for analytical
 	double delta_array[3] = { 0.05, 0.04, 0.4 };
 	double ex_delta = 0.01;
 	double ex_delta_array[3] = { 0.01, 0.06, 0.1 };
-	double new_node = 0.01;
+	double new_node = 0.02;
 };
 //cout << NODES_A[0].contact_rate * NODES_A[0].success_prob*NODES_A[0].Op_k*(E + I) << " ";
 //cout << (NODES_A[0].scan_rate*(NODES_A[0].Area_i * ((E + I) / area))) << " ";

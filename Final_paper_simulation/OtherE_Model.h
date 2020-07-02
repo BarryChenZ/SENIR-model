@@ -360,17 +360,18 @@ void SEIQRD_model() {
 //Idea: Comparing only long, only short, hybrid
 /*
 Direct:
-1.Web malware spread modelling and optimal control strategies %liu2017web test ok
+1.Web malware spread modelling and optimal control strategies %liu2017web test ok(t結束後)
 2.Virus Propagation and Patch Distribution in Multiplex Networks: Modeling, Analysis, and Optimal Allocation
 */
 /*
 Short:
-3.SNIRD Disclosing Rules of Malware Spread in Heterogeneous Wireless Sensor Networks(without mobility)
-4.An Epidemiology-Based Model for Disclosing Dynamics of Malware Propagation in Heterogeneous and Mobile WSNs(with mobility)
+3.SNIRD Disclosing Rules of Malware Spread in Heterogeneous Wireless Sensor Networks(without mobility)(移動後)
+4.An Epidemiology-Based Model for Disclosing Dynamics of Malware Propagation in Heterogeneous and Mobile WSNs(with mobility)移動中
 */
 /*
 Hybrid:
-5.Modelling the Spread of Botnet Malware in IoT-Based Wireless Sensor Networks(without mobility)
+5.Modelling the Spread of Botnet Malware in IoT-Based Wireless Sensor Networks(without mobility) t結束後
+
 */
 
 class liu2017web{//SDIR (susceptible,delitescent,infected,recovered)
@@ -378,10 +379,11 @@ private:
 	int n, RunT;
 	double infected_start = 0.1;
 	//parameters
-	double lambda = 0.00005, mu = 0.5, epsilon = 0.2, gamma = 0.2, d = 0.01, b = 100, zeta = 0.1;//論文數據
+	double lambda = 0.001, mu = 0.02, epsilon = 0.1, gamma = 0.02, d = 0.05, b , zeta = 0.1;//論文數據
 public:
 	liu2017web(int num, int time) {
 		n = num, RunT = time;
+		b = n * infected_start;
 	}
 	vector<vector<double>> Process() {
 		vector<vector<double>> res(RunT, vector<double>(4, 0.0));
@@ -397,6 +399,7 @@ public:
 			Computing(tmp, state);
 			Update(tmp, state);
 			cout << t << ": ";
+			n += b;
 			Printing(state, res[t]);
 			++t;
 		}
@@ -642,10 +645,11 @@ public:
 class acarali2019modelling {//SIIIS 問題1:S感覺都一樣 建好
 private:
 	int n, RunT, WSN = 5;
-	double alpha = 0.25;
-	double I_r_2 = 0.002, I_loc_2 = 0, I_nhb_2 = 0;
-	double beta_random = 0.3 , beta_local = 0.4 , beta_p2p = 0.6;
-	double dth_random  = 0.01, dth_local = 0.018, dth_p2p = 0.01, dth = 0.01;
+	double alpha = 0.02;//0.1很接近
+	//double I_r_2 = 0.002, I_loc_2 = 0, I_nhb_2 = 0;
+	//double beta_random = 0.3 , beta_local = 0.4 , beta_p2p = 0.6;
+	double beta_random = 0.07, beta_local = 0.3, beta_p2p = 0.3;//由參數1*3 2*4對應
+	double dth_random  = 0.01, dth_local = 0.01, dth_p2p = 0.01, dth = 0.05;
 	double infected_start = 0.1;
 public:
 	acarali2019modelling(int num, int time) {
