@@ -19,25 +19,25 @@ struct Node_a {//for analytical
 	//experiment 1 
 	double contact_rate_array[3] = {0.3, 0.6, 0.9};
 	double contact_rate = 5;//Rate_c 
-	double success_prob = 0.6;//P_sucess
-	double open_rate = 0.5;//Rate_o prob
+	double success_prob = 0.8;//P_sucess
+	double open_rate = 0.8;//Rate_o prob
 	double open_rate_array[3] = {0.1, 0.5, 1.0};
-	double scan_rate = 5;//1-100不會爆掉
+	double scan_rate = 10;//1-100不會爆掉
 	double collision_cost = 0.2;
 	double collision_cost_array[3] = {0.2, 0.5, 1.0};
-	double prob_NI = 0.6;
+	double prob_NI = 0.5;
 	double prob_NI_array[3] = {0.3, 0.6, 0.9};
 	//wake_up_rate, Loss_imu_rate, Recover_rate
 	//death_rare, extra_death_rate
 	double omega = 0.3;
 	double omega_r = 0.2;
-	double gamma = 0.02;//0.01;
+	double gamma = 0.1;//0.01;
 	double lambda = 0.1;//0.1;
 	double delta = 0.05;
 	double delta_array[3] = { 0.05, 0.04, 0.4 };
 	double ex_delta = 0.01;
 	double ex_delta_array[3] = { 0.01, 0.06, 0.1 };
-	double new_node = 0.02;
+	double new_node = 0.03;
 };
 //cout << NODES_A[0].contact_rate * NODES_A[0].success_prob*NODES_A[0].Op_k*(E + I) << " ";
 //cout << (NODES_A[0].scan_rate*(NODES_A[0].Area_i * ((E + I) / area))) << " ";
@@ -77,18 +77,13 @@ double new_node = 0.01;
 // new_node = new rate
 
 void setting(vector<Node>& NODES, Node_a j) {
-	double b = 1.0;
 	for (int i = 0; i < NODES.size(); i++) {
-		//4 value set by average
-		//NODES[i].exposed_rate = record[0] * b;
-		//NODES[i].iNsidious_rate = record[1] * b;
-		//NODES[i].infected_rate = record[2] * b;
-		//NODES[i].infected_rate_2 = record[3];
 		//4 value set by average
 		NODES[i].recovered_rate = j.gamma;
 		NODES[i].death_rate = j.delta;
 		NODES[i].ex_death_rate = j.ex_delta;
 		NODES[i].lose_immunity_rate = j.lambda;
+		NODES[i].new_rate = j.new_node;
 	}
 	return;
 }
@@ -308,11 +303,10 @@ void storeParameters(vector<Node_a> NODES_A, unordered_map<int, vector<vector<do
 		record[NODES_A[j].degree][t][2] = NODES_A[j].Op_k * I * NODES_A[j].open_rate;
 		record[NODES_A[j].degree][t][3] = (1 - NODES_A[j].collision_cost * (I))*NODES_A[j].prob_NI;
 		//如果公式有改 這邊也要改
-		//record[t][0] += ((NODES_A[j].num * (NODES_A[j].contact_rate * NODES_A[j].success_prob*NODES_A[j].Op_k*(E + I))) / (double)number);
-		//record[t][1] += ((NODES_A[j].num * NODES_A[j].scan_rate*(NODES_A[j].Area_i * ((E + I) / (max_x * max_y)))) / (double)number);
-		//i.scan_rate*(i.Area_i*((E + I)) / area)
-		//record[t][2] += ((NODES_A[j].num * NODES_A[j].Op_k * I * NODES_A[j].open_rate) / (double)number);
-		//record[t][3] += ((NODES_A[j].num *  (1 - NODES_A[j].collision_cost * (I))*NODES_A[j].prob_NI) / (double)number);
+		cout << NODES_A[0].contact_rate * NODES_A[0].success_prob*NODES_A[0].Op_k*(E + I) << " ";
+		cout << (NODES_A[0].scan_rate*(NODES_A[0].Area_i * ((E + I) / (max_x * max_y)))) << " ";
+		cout << NODES_A[0].Op_k*I*NODES_A[0].open_rate << " ";
+		cout << (1 - NODES_A[0].collision_cost * (I))*NODES_A[0].prob_NI << endl;
 	}
 }
 
@@ -348,7 +342,7 @@ vector<vector<double>> process_a(vector<Node_a>& NODES_A, Social_network S, Phys
 	NODES_A.resize(3);
 	//cout << NODES_A[0].contact_rate_array[k - 1] << endl;//test 要修改1
 
-	vector<vector<double>> tmp(NODES_A.size(), vector<double>(6, 0.0));//SENIRD:012345
+	
 	NODES_A[0].v.resize(number * 0.1), NODES_A[0].num = number * 0.1, NODES_A[0].degree = 50;
 	NODES_A[1].v.resize(number * 0.3), NODES_A[1].num = number * 0.3, NODES_A[1].degree = 20;
 	NODES_A[2].v.resize(number * 0.6), NODES_A[2].num = number * 0.6, NODES_A[2].degree = 10;
@@ -367,7 +361,7 @@ vector<vector<double>> process_a(vector<Node_a>& NODES_A, Social_network S, Phys
 
 	//GM.initial_v(NODES_A[i].v);
 	//GM.initial_v(NODES_A[i].v, k);
-	for (int i = 0; i < NODES_A.size(); i++) GM.initial_v(NODES_A[i].v, k);//改速度的實驗
+	for (int i = 0; i < NODES_A.size(); i++) GM.initial_v(NODES_A[i].v);//改速度的實驗
 	//state initialize 10% infection at t = 0
 	for (int i = 0; i < NODES_A.size(); i++) {
 		NODES_A[i].state.resize(6, 0.0);
@@ -382,7 +376,7 @@ vector<vector<double>> process_a(vector<Node_a>& NODES_A, Social_network S, Phys
 		}
 	}
 	cout << 0 << endl;
-	for(int i = 0; i < NODES_A.size(); i++) computeArea_OpK(NODES_A, P, NODES_A[i]);
+	//for(int i = 0; i < NODES_A.size(); i++) computeArea_OpK(NODES_A, P, NODES_A[i]);
 	Printing(NODES_A, res[0]);
 	int t = 1;
 	double area = max_x * max_y;
@@ -403,8 +397,8 @@ vector<vector<double>> process_a(vector<Node_a>& NODES_A, Social_network S, Phys
 			N += (double)(NODES_A[i].state[2] * (double)NODES_A[i].num) / (double)number;
 			I += (double)(NODES_A[i].state[3] * (double)NODES_A[i].num) / (double)number;
 		}
-		//cout << "E:" << E << " N:" << N << " I:" << I << endl;
 		//Calculating the fraction change of degree group
+		vector<vector<double>> tmp(NODES_A.size(), vector<double>(6, 0.0));//SENIRD:012345
 		for (int i = 0; i < NODES_A.size(); i++) {
 			computeArea_OpK(NODES_A, P, NODES_A[i]);//Area會變 但是Op_k不變
 			Compute_prob_frac(E, N, I, area, tmp[i], NODES_A[i]);
@@ -413,10 +407,11 @@ vector<vector<double>> process_a(vector<Node_a>& NODES_A, Social_network S, Phys
 		cout << t << endl;
 		storeParameters(NODES_A, record, E, N, I, t);
 		//cout << NODES_A[0].Area_i << " ";
-		cout << NODES_A[0].contact_rate * NODES_A[0].success_prob*NODES_A[0].Op_k*(E + I) << " ";
-		cout << (NODES_A[0].scan_rate*(NODES_A[0].Area_i * ((E + I) / area))) << " ";
-		cout << NODES_A[0].Op_k*I*NODES_A[0].open_rate << " ";
-		cout << (1 - NODES_A[0].collision_cost * (I))*NODES_A[0].prob_NI << endl;
+		//cout << NODES_A[0].contact_rate * NODES_A[0].success_prob*NODES_A[0].Op_k*(E + I) << " ";
+		//cout << (NODES_A[0].scan_rate*(NODES_A[0].Area_i * ((E + I) / area))) << " ";
+		//cout << NODES_A[0].Op_k*I*NODES_A[0].open_rate << " ";
+		//cout << (1 - NODES_A[0].collision_cost * (I))*NODES_A[0].prob_NI << endl;
+
 		//updating
 		for (int i = 0; i < NODES_A.size(); i++) {
 			update(tmp[i], NODES_A[i].state);
@@ -425,7 +420,7 @@ vector<vector<double>> process_a(vector<Node_a>& NODES_A, Social_network S, Phys
 		Printing(NODES_A, res[t]);
 		t++;
 	}
-	cout << NODES_A[0].Area_i << " " << NODES_A[0].Op_k << endl;
+	//cout << NODES_A[0].Area_i << " " << NODES_A[0].Op_k << endl;
 	//cout << record[0] << " " << record[1] << " " << record[2] << " " << record[3] << endl;
 	setting(NODES, NODES_A[0]);
 	return res;

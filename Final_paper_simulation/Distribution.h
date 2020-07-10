@@ -28,18 +28,18 @@ private:
 	int status = 0;
 	//transmission
 	vector<double> rate;//參數可以是rate也可以分開假設//暫定
-	double degree_P;
 	//mobility
 	double x_pos, y_pos;
 public:
 	double degree_S;
+	double degree_P;
 	vector<int> neighbor_set;
 	double infected_rate = 0.04;
 	double infected_rate_2 = 0.72;
 	double received_rate = 0.02;
 	double exposed_rate = 0.015;
 	double iNsidious_rate = 0.015;
-	double recovered_rate = 0.1;
+	double recovered_rate = 0.01;
 	double death_rate = 0.05;
 	double ex_death_rate = 0.01;
 	double wake_up_rate = 0.3;
@@ -101,10 +101,10 @@ public:
 			NODES[i].set_position(tmp1, tmp2);
 		}
 		for (int i = 0; i < nums; i++) {
-			NODES[i].set_degreeP(get_degree(i,NODES));
+			get_degree(i,NODES);
 		}
 	}
-	double get_degree(int ID, vector<Node>& NODES) {
+	void get_degree(int ID, vector<Node>& NODES) {
 		double res = 0;
 		NODES[ID].neighbor_set.clear();
 		for (int i = 0; i < nums; i++) {
@@ -113,8 +113,9 @@ public:
 				NODES[ID].neighbor_set.push_back(i);
 				res++;
 			}
+			NODES[ID].degree_P = res;
 		}
-		return res;
+		return;
 	}
 	double get_range() {//for mathmatics model
 		return range;
