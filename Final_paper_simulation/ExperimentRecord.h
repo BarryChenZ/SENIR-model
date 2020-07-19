@@ -108,10 +108,10 @@ void Exp_Record(vector<vector<double>> res, int type1, int type2, int ExpNum) {/
 	string s3, s4 = ".csv";
 	string s5 = to_string(type2);
 	if (type1 == 1) {
-		s3 = "\\SimRes_exp";
+		s3 = "\\SimRes_NEWexp";
 	}
 	else if (type1 == 2) {
-		s3 = "\\AnaRes_exp";
+		s3 = "\\AnaRes_NEWexp";
 	}
 	s = s1 + s2 + s3 + s2 + "_" + s5 + s4;
 	file.open(s, ios::out);

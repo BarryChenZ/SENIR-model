@@ -16,6 +16,8 @@
 #include <time.h>
 #include <fstream>
 #include "Distribution.h"
+#include "FinalModel.h"
+
 
 using namespace std;
 //1 old
@@ -371,7 +373,9 @@ Short:
 /*
 Hybrid:
 5.Modelling the Spread of Botnet Malware in IoT-Based Wireless Sensor Networks(without mobility) t結束後
-
+缺一個移動結束
+SADI //Malware但有點難
+Epidemic spreading in localized environments with recurrent mobility patterns //雖然不是malware 但有機會拿他的概念來作
 */
 
 class liu2017web{//SDIR (susceptible,delitescent,infected,recovered)
@@ -380,12 +384,17 @@ private:
 	double infected_start = 0.1;
 	//parameters
 	double lambda = 0.001, mu = 0.02, epsilon = 0.1, gamma = 0.02, d = 0.05, b , zeta = 0.1;//論文數據
+	//lambda: exposed rate
+	//epsilon: infection rate 
+	//gamma and mu: recovered rate
+	//d: death rate
+	//zeta: lose immunity rate
 public:
 	liu2017web(int num, int time) {
 		n = num, RunT = time;
 		b = n * infected_start;
 	}
-	vector<vector<double>> Process() {
+	vector<vector<double>> Process(unordered_map<int, vector<vector<double>>> record, Node_a i) {
 		vector<vector<double>> res(RunT, vector<double>(4, 0.0));
 		res.resize(RunT, vector<double>(4, 0.0));
 		vector<double> state(4, 0.0);
@@ -394,7 +403,14 @@ public:
 		cout << 0 << ": ";
 		Printing(state, res[0]);
 		int t = 1;
+		b = i.new_node * n;
 		while (t < RunT) {
+			lambda = record[10][t][0]/(double)n*10;
+			epsilon = record[10][t][2];
+			gamma = i.gamma, mu = i.gamma;
+			d = i.delta;
+			zeta = i.lambda;
+
 			vector<double> tmp(4,0.0);
 			Computing(tmp, state);
 			Update(tmp, state);
@@ -655,7 +671,7 @@ public:
 	acarali2019modelling(int num, int time) {
 		n = num, RunT = time;
 	}
-	vector<vector<double>> Process() {
+	vector<vector<double>> Process(unordered_map<int, vector<vector<double>>> record, Node_a i) {
 		vector<vector<double>> res(RunT, vector<double>(2, 0.0));//0 S 1 I
 		vector<double> state(4, 0.0);//比例
 		//0S 1I_random 2I_local 3I_p2p
@@ -666,8 +682,15 @@ public:
 		Printing(state, res[0]);
 		int t = 1;
 		while (t < RunT) {
-			double I = 0.0;
-			I = state[1] + state[2] + state[3];
+			//可能要把機率寫到這
+			dth_random = dth_local = dth_p2p = i.ex_delta;
+			dth = i.delta;
+			beta_random = record[10][t][2];
+			beta_local = record[10][t][3];
+			beta_p2p = record[10][t][3];
+			alpha = i.gamma;
+
+			double I = state[1] + state[2] + state[3];
 			vector<double> tmp(4, 0.0);
 			Computing(tmp, state, I);
 			Update(tmp, state);
@@ -677,11 +700,11 @@ public:
 		}
 		return res;
 	}
-	void Computing(vector<double>& tmp, vector<double> state,double I) {// S = S_loc = S_nhb
-		tmp[0] = -beta_random * state[0] * I - beta_local * state[0] * I - beta_p2p * state[0] * I - dth * state[0] + alpha * I;
+	void Computing(vector<double>& tmp, vector<double> state,double I) {// S = S_loc, S_nhb應該不等於S
+		tmp[0] = -beta_random * state[0] * I - beta_local * state[0] * I - beta_p2p * state[0]*0.1 * I - dth * state[0] + alpha * I;
 		tmp[1] = beta_random * state[0] * I - alpha * state[1] - dth * state[1] - dth_random * state[1];
 		tmp[2] = beta_local * state[0] * I - alpha * state[2] - dth * state[2] - dth_local * state[2];
-		tmp[3] = beta_p2p * state[0] * I - alpha * state[3] - dth * state[3] - dth_p2p * state[3];
+		tmp[3] = beta_p2p * state[0]*0.1 * I - alpha * state[3] - dth * state[3] - dth_p2p * state[3];
 	}
 	void Update(vector<double> tmp, vector<double>& state) {
 		for (int i = 0; i < state.size(); i++) {
