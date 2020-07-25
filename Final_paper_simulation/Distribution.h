@@ -17,6 +17,7 @@
 #include <vector>
 #include <map>
 #include <math.h>
+#include <fstream>
 //#include "Mobility.h"
 using namespace std;
 
@@ -34,10 +35,10 @@ public:
 	double degree_S;
 	double degree_P;
 	vector<int> neighbor_set;
-	double infected_rate = 0.04;
+	double infected_rate = 0.2;
 	double infected_rate_2 = 0.72;
 	double received_rate = 0.02;
-	double exposed_rate = 0.015;
+	double exposed_rate = 0.02;
 	double iNsidious_rate = 0.015;
 	double recovered_rate = 0.01;
 	double death_rate = 0.05;
@@ -104,6 +105,7 @@ public:
 			get_degree(i,NODES);
 		}
 	}
+
 	void get_degree(int ID, vector<Node>& NODES) {
 		double res = 0;
 		NODES[ID].neighbor_set.clear();
@@ -113,8 +115,8 @@ public:
 				NODES[ID].neighbor_set.push_back(i);
 				res++;
 			}
-			NODES[ID].degree_P = res;
 		}
+		NODES[ID].degree_P = res;
 		return;
 	}
 	double get_range() {//for mathmatics model
@@ -153,6 +155,37 @@ public:
 		initial_fixedDegree(degree);
 		
 	}
+
+	// for real social network data
+	Social_network(int num, vector<Node>& NODES, int special) {
+		cout << "Constructing social network from Dataset" << endl;
+		nodes = num;
+
+		fstream file_fb;
+		file_fb.open("C:\\Users\\User\\Desktop\\Code\\Dataset\\facebook_combined.txt", ios::in);
+
+		adj_matrix.resize(nodes, vector<int>(nodes,0));
+		do {
+			int *data = new int[2];
+			for (int i = 0; i < 2; i++) file_fb >> data[i];
+			//cout << data[0] << " " << data[1] << endl;
+			adj_matrix[data[0]][data[1]] = 1, adj_matrix[data[1]][data[0]] = 1;
+			delete[] data;
+		} while (!file_fb.eof());
+
+		for (int i = 0; i < nodes; i++) {
+			double tmp = 0;
+			for (int j = 0; j < nodes; j++) {
+				if (adj_matrix[i][j] == 1) tmp++;
+			}
+			NODES[i].degree_S = tmp;
+			if (degree_count.find(tmp) != degree_count.end()) degree_count[tmp]++;
+			else degree_count[tmp] = 1;
+			//cout << tmp << endl;
+		}
+		file_fb.close();
+	}
+
 	void initial() {
 		//srand((unsigned)time(NULL));
 		//average_degree = AVG_D;

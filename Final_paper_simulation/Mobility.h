@@ -205,13 +205,15 @@ public:
 		std::random_device rd;
 		std::default_random_engine generator(rd());
 		std::normal_distribution<double> distribution(mu, sigma);
-		direction = chi_d * direction + (1 - chi_d)*mu_v + chi_s * (distribution(generator)*sqrt(1 - pow(chi_d, 2)));
+
+		double ra = distribution(generator);
+		direction = chi_d * direction + (1 - chi_d)*mu_v + chi_s * (ra*sqrt(1 - pow(chi_d, 2)));
 	}
-	void Process(vector<Node>& NODES) {//Moving one time
+	void Process(vector<Node>& NODES) {//Moving one time, ©Ç©Çªº
 		double x = NODES[number].get_position_x() + velocity * cos(direction);
-		double y = NODES[number].get_position_y() + direction * sin(direction);
+		double y = NODES[number].get_position_y() + velocity * sin(direction);
 		if (x > max_x || x < 0) x = NODES[number].get_position_x() - velocity * cos(direction);
-		if (y > max_y || y < 0) y = NODES[number].get_position_y() - velocity * cos(direction);
+		if (y > max_y || y < 0) y = NODES[number].get_position_y() - velocity * sin(direction);
 		NODES[number].set_position(x, y);
 	}
 	double get_velocity() {

@@ -18,14 +18,14 @@ struct Node_a {//for analytical
 	vector<double> v;//velocity for node
 	//experiment 1 
 	double contact_rate_array[3] = {4, 2, 6};
-	double contact_rate = 5;//Rate_c 
-	double success_prob = 0.6;//P_sucess
-	double open_rate = 0.5;//Rate_o prob
+	double contact_rate = 20;//Rate_c 
+	double success_prob = 0.8;//P_sucess
+	double open_rate = 90;//Rate_o prob
 	double open_rate_array[3] = {0.1, 0.3, 0.8};
-	double scan_rate = 0.005;//1-100不會爆掉
+	double scan_rate = 0.0;// 0.005;//1-100不會爆掉
 	double collision_cost = 0.2;
 	double collision_cost_array[3] = {2000, 5000, 10000};//Decay
-	double prob_NI = 0.6;
+	double prob_NI = 0.0;// 0.6;
 	double prob_NI_array[3] = {0.2, 0.5, 0.9};
 	//wake_up_rate, Loss_imu_rate, Recover_rate
 	//death_rare, extra_death_rate
@@ -47,6 +47,7 @@ struct Node_a {//for analytical
 //cout << (1 - NODES_A[0].collision_cost * (I))*NODES_A[0].prob_NI << endl;
 //parameters
 int number = 1000; // 4
+int FB_number = 4039;
 int number_array[3] = { 3000,5000,10000 };
 int total_time = 50;
 double max_x = 1000, max_y = 1000;
@@ -96,7 +97,7 @@ void computeArea_OpK(vector<Node_a>& NODES_A, Physical_network P, Node_a& i) {
 	}
 	mean_v = mean_v / (double)i.num;
 	i.Area_i = PI * pow(P.get_range(), 2) + 2 * P.get_range()*mean_v * 1;//t = 1;
-	cout << i.Area_i << endl;
+	//cout << i.Area_i << endl;
 	double total_link = 0.0;
 	for (int j = 0; j < NODES_A.size(); j++){
 		total_link += NODES_A[j].num * NODES_A[j].degree;
@@ -290,7 +291,8 @@ void Printing(vector<Node_a> NODES_A, vector<double>& res1) {
 	vector<double> res(6, 0.0);//SENIRD
 	for (int i = 0; i < NODES_A.size(); i++) {
 		for (int j = 0; j < NODES_A[i].state.size(); j++) {//fraction
-			res[j] += ((double)(NODES_A[i].state[j])* (double)NODES_A[i].num)/(double)number;
+			//res[j] += ((double)(NODES_A[i].state[j])* (double)NODES_A[i].num)/(double)number;
+			res[j] += ((double)(NODES_A[i].state[j])* (double)NODES_A[i].num) / (double)FB_number;
 		}
 	}
 	for (int i = 0; i < res.size(); i++) {
@@ -312,16 +314,16 @@ void storeParameters(vector<Node_a> NODES_A, unordered_map<int, vector<vector<do
 		//record[NODES_A[j].degree][t][3] = (1 - NODES_A[j].collision_cost * (TI) / (max_x * max_y))*NODES_A[j].prob_NI;
 
 		//如果公式有改 這邊也要改
-		cout << NODES_A[j].contact_rate * NODES_A[j].success_prob*NODES_A[j].Op_k*(E + I) << " ";
+		cout << NODES_A[j].contact_rate * NODES_A[j].success_prob*NODES_A[j].Op_k*(E + I) << " ";//This
 		//cout << NODES_A[j].contact_rate * NODES_A[j].success_prob*NODES_A[j].Op_k*(TE + TI) << " ";
 		//cout << (NODES_A[j].scan_rate*(NODES_A[j].Area_i * ((E + I) / (max_x * max_y)))) << " ";
-		cout << (NODES_A[j].scan_rate*(NODES_A[j].Area_i * ((TE + TI) / (max_x * max_y)))) << " ";
+		//cout << (NODES_A[j].scan_rate*(NODES_A[j].Area_i * ((TE + TI) / (max_x * max_y)))) << " ";//This
 		//cout << NODES_A[j].scan_rate << " " << (NODES_A[j].Area_i/ (max_x * max_y) )* (TE + TI) << endl;
-		cout << NODES_A[j].Op_k*I*NODES_A[j].open_rate << " ";
+		cout << NODES_A[j].Op_k*I*NODES_A[j].open_rate << " " << endl;//This
 		//cout << NODES_A[j].Op_k*TI*NODES_A[j].open_rate << " ";
-		cout << (1 - NODES_A[j].collision_cost * (I))*NODES_A[j].prob_NI << endl;
+		//cout << (1 - NODES_A[j].collision_cost * (I))*NODES_A[j].prob_NI << endl;//This
 		//cout << (1 - NODES_A[j].collision_cost * (TI) / (max_x * max_y))*NODES_A[j].prob_NI << endl;
-		cout << NODES_A[j].effect_delta << endl;
+		//cout << NODES_A[j].effect_delta << endl;//This
 	}
 }
 
@@ -361,15 +363,21 @@ vector<vector<double>> process_a(vector<Node_a>& NODES_A, Social_network S, Phys
 	//record.resize(total_time, vector<double>(4,0.0)); // record 4 value, prapare to transmit to the simulation parameters.
 	Gauss_Markov GM = Gauss_Markov();
 	//initial test only 3種degree 50 20 10/10% 30% 60% 舊的
-	
+	/*
 	NODES_A.resize(3);
 	//cout << NODES_A[0].contact_rate_array[k - 1] << endl;//test 要修改1
-
-	
 	NODES_A[0].v.resize(number * 0.1), NODES_A[0].num = number * 0.1, NODES_A[0].degree = 50;
 	NODES_A[1].v.resize(number * 0.3), NODES_A[1].num = number * 0.3, NODES_A[1].degree = 20;
 	NODES_A[2].v.resize(number * 0.6), NODES_A[2].num = number * 0.6, NODES_A[2].degree = 10;
-	
+	*/
+	//FB dataset
+	NODES_A.resize(S.degree_count.size());
+	map<int, int>::iterator it = S.degree_count.begin();
+	for (int i = 0; i < NODES_A.size(); i++, it++) {
+		NODES_A[i].v.resize(it->second,0);
+		NODES_A[i].num = it->second;
+		NODES_A[i].degree = it->first;
+	}
 	//新的BA model模式 會有部分Degree只有一個點
 	/*
 	NODES_A.resize(S.degree_count.size());
@@ -388,8 +396,8 @@ vector<vector<double>> process_a(vector<Node_a>& NODES_A, Social_network S, Phys
 	//state initialize 10% infection at t = 0
 	for (int i = 0; i < NODES_A.size(); i++) {
 		NODES_A[i].state.resize(6, 0.0);
-		NODES_A[i].state[0] = 1.0 - 0.1, NODES_A[i].state[3] = 0.1;
-
+		//NODES_A[i].state[0] = 1.0 - 0.1, NODES_A[i].state[3] = 0.1;//fb 不適用
+		NODES_A[i].state[0] = 1.0;
 		NODES_A[i].effect_delta = NODES_A[i].delta;
 		if (k != 0) {//修改參數
 			//NODES_A[i].contact_rate = NODES_A[i].contact_rate_array[k - 1]; //Exp1
@@ -403,6 +411,21 @@ vector<vector<double>> process_a(vector<Node_a>& NODES_A, Social_network S, Phys
 
 		if (record.find(NODES_A[i].degree) == record.end()) {
 			record[NODES_A[i].degree] = {vector<vector<double>>(total_time, vector<double>(4, 0.0))};
+		}
+	}
+	//分開做 random找
+	vector<int> random_infection_initial;
+	for (int i = 0; i < 4039; i++) random_infection_initial.push_back(i);
+	random_shuffle(random_infection_initial.begin(), random_infection_initial.end());
+	for (int i = 0; i < 404; i++) {
+		
+		for (int j = 0; j < NODES_A.size(); j++) {
+			if (NODES_A[j].degree == NODES[random_infection_initial[i]].degree_S) {
+				NODES_A[j].state[0] = (NODES_A[j].state[0] * NODES_A[j].num - 1) / (double)NODES_A[j].num;
+				NODES_A[j].state[3] = (NODES_A[j].state[3] * NODES_A[j].num + 1) / (double)NODES_A[j].num;
+				//cout << NODES_A[j].state[0] << " " << NODES_A[j].state[3] << endl;
+				break;
+			}
 		}
 	}
 	cout << 0 << endl;
