@@ -35,18 +35,18 @@ public:
 	double degree_S;
 	double degree_P;
 	vector<int> neighbor_set;
-	double infected_rate = 0.2;
-	double infected_rate_2 = 0.72;
-	double received_rate = 0.02;
-	double exposed_rate = 0.02;
-	double iNsidious_rate = 0.015;
-	double recovered_rate = 0.01;
-	double death_rate = 0.05;
-	double ex_death_rate = 0.01;
-	double wake_up_rate = 0.3;
-	double wake_up_rate_r = 0.2;
-	double lose_immunity_rate = 0.1;
-	double new_rate = 0.01;// new rate = leave rate
+	double infected_rate = 0.0; 
+	double infected_rate_2 = 0.005; //D 0.005
+	double received_rate = 0.02; 
+	double exposed_rate = 0.02; 
+	double iNsidious_rate = 0.85; //D 0.9
+	double recovered_rate = 0.0003; //D 0.005/0.0003
+	double death_rate = 0.000005; //D  0.000005
+	double ex_death_rate = 0.000001; //D 0.000001
+	double wake_up_rate = 0.0003;
+	double wake_up_rate_r = 0.0002;
+	double lose_immunity_rate = 0.001; //D 0.001
+	double new_rate = 0.0001;// new rate = leave rate
 
 	Node(int ID) {
 		number = ID;
@@ -87,7 +87,7 @@ class Physical_network {
 	//can be one or >1 group
 private:
 	int nums; //可以有部分或者很多點
-	double range = 100.0;//10 average degree:1, 30 average degree: 5, 50 average degree: 8
+	double range = 800.0;//10 average degree:1, 30 average degree: 5, 50 average degree: 8
 	double range_array[3] = {10, 100, 300};
 	double max_x = 1000, max_y = 1000;
 public:
@@ -168,7 +168,7 @@ public:
 		do {
 			int *data = new int[2];
 			for (int i = 0; i < 2; i++) file_fb >> data[i];
-			//cout << data[0] << " " << data[1] << endl;
+			cout << data[0] << " " << data[1] << endl;
 			adj_matrix[data[0]][data[1]] = 1, adj_matrix[data[1]][data[0]] = 1;
 			delete[] data;
 		} while (!file_fb.eof());

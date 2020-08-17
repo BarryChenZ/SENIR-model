@@ -96,7 +96,7 @@ void exposedProcess(vector<Node>& NODES, vector<int>& temp, vector<vector<int>> 
 			//cout << "1: " << infected_neighbor_num_e << " " << infected_neighbor_num_n << endl;
 			//cout << "2: " << NODES[i].exposed_rate << " " << NODES[i].iNsidious_rate << endl;
 			//cout << "3: " << infected_probability_e << " " << infected_probability_n << endl;
-			if (guessTrue(infected_probability_e)) {
+			if (guessTrue(infected_probability_e)) {//也可以慢慢找，有難度
 				temp[i] = 1;
 			}
 			if (guessTrue(infected_probability_n)) {//有時候，問題出在這
