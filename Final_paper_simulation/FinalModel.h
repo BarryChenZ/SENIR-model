@@ -22,10 +22,10 @@ struct Node_a {//for analytical
 	double success_prob = 0.8;//P_sucess
 	double open_rate = 0.0;// 90;//Rate_o prob
 	double open_rate_array[3] = {0.1, 0.3, 0.8};
-	double scan_rate = 0.00010;// 0.005;//1-100不會爆掉
+	double scan_rate = 0.000040;// 0.005;//1-100不會爆掉
 	double collision_cost = 0.2;
 	double collision_cost_array[3] = {2000, 5000, 10000};//Decay
-	double prob_NI = 0.012;// 0.6;
+	double prob_NI = 0.4;// 0.6;
 	double prob_NI_array[3] = {0.2, 0.5, 0.9};
 	//wake_up_rate, Loss_imu_rate, Recover_rate
 	//death_rare, extra_death_rate
@@ -33,7 +33,7 @@ struct Node_a {//for analytical
 	double omega_r = 0.2;
 	double gamma = 0.002;//0.02;//0.01;
 	double lambda = 0.01;//0.1;//0.1;
-	double delta = 0.000005; //0.05
+	double delta = 0.00001; //0.05
 	double delta_array[3] = { 0.05, 0.04, 0.4 };
 	double ex_delta = 0.000001; //0.01
 	double ex_delta_array[3] = { 0.01, 0.08, 0.1 };
@@ -49,7 +49,7 @@ struct Node_a {//for analytical
 int number = 1000; // 4
 int FB_number = 4039;
 int number_array[3] = { 3000,5000,10000 };
-int total_time = 1042;
+int total_time = 1193;
 double max_x = 1000, max_y = 1000;
 
 double contact_rate = 5;//Rate_c

@@ -36,7 +36,7 @@ public:
 	double degree_P;
 	vector<int> neighbor_set;
 	double infected_rate = 0.0; 
-	double infected_rate_2 = 0.005; //D 0.005
+	double infected_rate_2 = 0.8; //D 0.005,
 	double received_rate = 0.02; 
 	double exposed_rate = 0.02; 
 	double iNsidious_rate = 0.85; //D 0.9

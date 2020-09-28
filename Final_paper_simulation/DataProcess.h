@@ -27,6 +27,7 @@ struct transaction_ID {
 	int upload_time_hour;
 	int upload_time_minute;
 	int upload_time_second;
+	double distan; //方便收集限制範圍內的資料
 
 	string rx_muuid_short;
 	string tx_muuid_short;
@@ -142,6 +143,7 @@ void DataStore(Physical_network P, Social_network S) {
 		trans_record[i].tx_muuid = record[i][1];
 		trans_record[i].tx_muuid_short = record[i][10];
 		trans_record[i].rx_muuid_short = record[i][9];
+		trans_record[i].distan = stod(record[i][5]);
 		//轉型 time 處理
 		int current = 0; //最初由 0 的位置開始找
 		int next;
@@ -243,7 +245,7 @@ void DataStore(Physical_network P, Social_network S) {
 		//if (trans_record[i].data == 29) record_29.push_back(trans_record[i]);
 	//}
 
-	cout << record_27.size() << endl;
+	//cout << record_27.size() << endl;
 
 	srand((unsigned)time(NULL));
 	for (int z = 0; z < times; z++) {
@@ -267,11 +269,16 @@ void DataStore(Physical_network P, Social_network S) {
 		int j = 1;
 
 
-
+		int count_28 = 0;
 		while (j <= trans_record.size() - 1) {
-			if (trans_record[j].data != 27) {
+			if (trans_record[j].data != 29) {
+				//27 
+				//28 1000000
+				//29 530000
 				//cout << j << endl;
-				break;
+				//break;
+				j++;
+				continue;
 			}
 			vector<double> time_temp;
 			//t_hour = record_27[j].upload_time_hour, t_min = record_27[j].upload_time_minute, t_sec = record_27[j].upload_time_second;
@@ -292,6 +299,7 @@ void DataStore(Physical_network P, Social_network S) {
 					break;
 				}
 				j++;
+				count_28++;
 			}
 			//cout << at_time.size() << endl;
 
@@ -364,9 +372,10 @@ void DataStore(Physical_network P, Social_network S) {
 			//cout << endl;
 		//}
 
-		cout << z << endl;
+		//cout << z << endl;
+		cout << count_28 << endl;
 	}
-	//Exp_Record(res, 1, 1, 18);//simulation
+	//Exp_Record(res, 1, 1, 29);//simulation
 
 	unordered_map<int, vector<vector<double>>> record_ana;
 	vector<vector<double>> res3;
@@ -376,7 +385,7 @@ void DataStore(Physical_network P, Social_network S) {
 
 	res3 = process_a(NODES_A, S, P, NODES_no_use, 1, record_ana);
 	//res3 = process_a(NODES_A, S, P, NODES, k, record);
-	Exp_Record(res3, 2, 1, 18); //要修改
+	Exp_Record(res3, 2, 1, 29); //要修改
 
 }
 
